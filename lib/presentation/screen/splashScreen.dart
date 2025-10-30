@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:schedule_ui/presentation/screen/login.dart';
 import 'package:schedule_ui/core/api_service/session_manager.dart';
 import 'package:schedule_ui/data/model/user_model.dart';
-import 'package:schedule_ui/presentation/screen/admin/admin_dashboard.dart';
 import 'package:schedule_ui/presentation/screen/teacher/teacher_dashboard.dart';
 import 'package:schedule_ui/presentation/screen/student/student_dashboard.dart';
+import 'package:schedule_ui/router/app_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -35,30 +36,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Nếu có token và user (đã đăng nhập trước đó)
     if (token != null && user != null) {
-      // Redirect tới dashboard tương ứng
-      if (user.isAdmin) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => AdminDashboard(user: user)),
-        );
-      } else if (user.isTeacher) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => TeacherDashboard(user: user)),
-        );
-      } else if (user.isStudent) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => StudentDashboard(user: user)),
-        );
-      } else {
-        // Fallback: redirect về login
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      }
+      // Redirect tới dashboard
+      context.go(AppRouter.dashboard);
     } else {
       // Không có session, redirect về LoginScreen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      context.go(AppRouter.login);
     }
   }
 

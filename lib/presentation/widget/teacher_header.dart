@@ -4,22 +4,22 @@ import 'package:schedule_ui/shared/widgets/app_header.dart';
 import 'package:schedule_ui/core/api_service/session_manager.dart';
 import 'package:schedule_ui/router/app_router.dart';
 
-class AdminHeader extends StatelessWidget {
-  const AdminHeader({super.key});
+class TeacherHeader extends StatelessWidget {
+  const TeacherHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
     return AppHeader(
-      userRole: 'Admin',
-      userName: 'Admin User',
-      searchHint: 'Tìm kiếm...',
+      userRole: 'Giảng viên',
+      userName: 'Teacher Name',
+      searchHint: 'Tìm kiếm lịch dạy...',
       onSearchChanged: (value) {
-        // Handle search functionality
-        print('Search: $value');
+        // Handle search functionality for teacher
+        print('Teacher Search: $value');
       },
       onNotificationPressed: () {
-        // Handle notifications
-        print('Notifications pressed');
+        // Handle notifications for teacher
+        print('Teacher notifications pressed');
       },
       onLogout: () async {
         // Show confirmation dialog

@@ -7,7 +7,7 @@ import 'presentation/screen/splashScreen.dart';
 import 'presentation/screen/login.dart';
 import 'presentation/screen/forgot_password.dart';
 import 'presentation/screen/reset_password.dart';
-import 'presentation/screen/admin/admin_dashboard.dart';
+import 'presentation/screen/admin/dashboard_overview.dart';
 import 'presentation/screen/teacher/teacher_dashboard.dart';
 import 'presentation/screen/student/student_dashboard.dart';
 import 'data/model/user_model.dart';
@@ -57,13 +57,8 @@ class MyApp extends StatelessWidget {
               '/login': (_) => const LoginScreen(),
               '/forgot-password': (_) => const ForgotPasswordScreen(),
               '/reset-password': (_) => const ResetPasswordScreen(),
-              '/admin': (_) => AdminDashboard(
-                user: UserModel(
-                  id: 0,
-                  username: '',
-                  email: '',
-                  role: 0,
-                ),
+              '/admin': (_) => AdminDashboardWrapper(
+                child: DashboardOverview(),
               ),
               '/teacher': (_) => TeacherDashboard(
                 user: UserModel(
