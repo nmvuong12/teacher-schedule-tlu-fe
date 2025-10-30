@@ -1,112 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:schedule_ui/shared/widgets/app_header.dart';
+import 'package:schedule_ui/core/api_service/session_manager.dart';
+import 'package:schedule_ui/router/app_router.dart';
 
 class AdminHeader extends StatelessWidget {
   const AdminHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 70,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+              return AppHeader(
+          userRole: 'Admin',
+          userName: 'Admin User',
+          searchHint: 'Tìm kiếm...',
+              onSearchChanged: (value) {
+          // Handle search functionality
+          print('Search: $value');
+    },
+      onNotificationPressed: () {
+        // Handle notifications
+        print('Notifications pressed');
+      },
+      onLogout: () async {
+        // Show confirmation dialog
+        final shouldLogout = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Xác nhận đăng xuất'),
+            content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Hủy'),
+              ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Đăng xuất'),
+                ),
         ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        child: Row(
-          children: [
-            // Title
-            const Expanded(
-              child: Text(
-                'Hệ thống quản lý lịch trình giảng dạy',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E3A8A),
-                ),
-              ),
-            ),
-            // Search bar
-            Container(
-              width: 300,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Tìm kiếm...',
-                  hintStyle: TextStyle(color: Colors.grey[500]),
-                  prefixIcon: Icon(
-                    FontAwesomeIcons.magnifyingGlass,
-                    size: 16,
-                    color: Colors.grey[500],
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Notifications
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: IconButton(
-                icon: FaIcon(
-                  FontAwesomeIcons.bell,
-                  size: 18,
-                  color: Colors.grey[600],
-                ),
-                onPressed: () {
-                  // Handle notifications
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            // User info
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.user,
-                    size: 16,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Admin',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1E3A8A),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
-      ),
+        );
+
+        if (shouldLogout == true) {
+        await SessionManager.logout();
+        if (context.mounted) {
+        context.go(AppRouter.login);
+        }
+        }
+      },
     );
   }
 }
