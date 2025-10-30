@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:schedule_ui/presentation/screen/login.dart';
@@ -24,23 +23,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _checkSessionAndNavigate() async {
-    // Delay 2 seconds để hiển thị splash screen
+// Delay 2 seconds để hiển thị splash screen
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    // Load session từ SharedPreferences
+// Load session từ SharedPreferences
     final (token, user) = await SessionManager.loadSession();
 
-    if (!mounted) return;
-
-    // Nếu có token và user (đã đăng nhập trước đó)
     if (token != null && user != null) {
-      // Redirect tới dashboard
-      context.go(AppRouter.dashboard);
+    // Redirect tới dashboard
+    context.go(AppRouter.dashboard);
     } else {
-      // Không có session, redirect về LoginScreen
-      context.go(AppRouter.login);
+// Không có session, redirect về LoginScreen
+    context.go(AppRouter.login);
     }
   }
 
@@ -48,47 +44,43 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     const Color primaryBlue = Color(0xFF3C5D93); // close to the screenshot
     return Scaffold(
-      backgroundColor: primaryBlue,
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.school_outlined,
-                size: 96,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'TLU SCHEDULE',
-                style: TextStyle(
+        backgroundColor: primaryBlue,
+        body: SafeArea(
+            child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                  const Icon(
+                  Icons.school_outlined,
+                  size: 96,
                   color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
                 ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: 120,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    minHeight: 6,
-                    backgroundColor: Colors.white.withOpacity(0.25),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
+                const SizedBox(height: 24),
+                const Text(
+                    'TLU SCHEDULE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
                 ),
-              ),
-            ],
-          ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: 120,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          minHeight: 6,
+                          backgroundColor: Colors.white.withOpacity(0.25),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ),
         ),
-      ),
     );
   }
 }
-
-
-
-
