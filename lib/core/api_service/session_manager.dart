@@ -34,6 +34,11 @@ class SessionManager {
     await prefs.remove(_keyToken);
     await prefs.remove(_keyUser);
   }
+
+  static Future<void> logout() async {
+    await clearSession();
+    // Có thể thêm logic khác như gọi API logout nếu cần
+  }
 }
 
 

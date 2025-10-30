@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:schedule_ui/presentation/screen/forgot_password.dart';
 import 'package:schedule_ui/core/api_service/network_service.dart';
 import 'package:schedule_ui/core/api_service/session_manager.dart';
-import 'package:schedule_ui/presentation/screen/admin/admin_dashboard.dart';
 import 'package:schedule_ui/presentation/screen/teacher/teacher_dashboard.dart';
-import 'package:schedule_ui/presentation/screen/student/student_dashboard.dart';
+import 'package:schedule_ui/router/app_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,18 +54,9 @@ class _LoginScreenState extends State<LoginScreen> {
         // Báo hiệu thành công cho hệ thống Autofill (để lưu MK)
         TextInput.finishAutofillContext(shouldSave: true);
 
-        if (response.user!.isAdmin) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => AdminDashboard(user: response.user!)),
-          );
-        } else if (response.user!.isTeacher) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => TeacherDashboard(user: response.user!)),
-          );
-        } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => StudentDashboard(user: response.user!)),
-          );
+        // Sau khi đăng nhập thành công, chuyển đến dashboard
+        if (mounted) {
+          context.go(AppRouter.dashboard);
         }
       } else {
         setState(() {
