@@ -21,9 +21,7 @@ import '../presentation/widget/admin_sidebar.dart';
 import '../presentation/widget/admin_header.dart';
 
 class AppRouter {
-  static const String splash = '/';
-  static const String login = '/login';
-  static const String dashboard = '/dashboard';
+  static const String dashboard = '/';
   static const String courses = '/courses';
   static const String leaveRequests = '/leave-requests';
   static const String statistics = '/statistics';
@@ -35,44 +33,8 @@ class AppRouter {
   static const String sessions = '/sessions';
 
   static final GoRouter router = GoRouter(
-    initialLocation: splash,
-    redirect: (context, state) async {
-      // Chỉ redirect khi KHÔNG ở splash screen
-      if (state.uri.path == splash) {
-        return null; // Cho phép splash screen hiển thị
-      }
-      
-      // Kiểm tra session cho các route khác
-      final (token, user) = await SessionManager.loadSession();
-      
-      // Nếu đang ở login screen và đã đăng nhập, chuyển đến dashboard
-      if (state.uri.path == login && token != null && user != null) {
-        return dashboard;
-      }
-      
-      // Nếu đang ở các route khác mà chưa đăng nhập, chuyển đến login
-      if (state.uri.path != login && state.uri.path != splash && (token == null || user == null)) {
-        return login;
-      }
-      
-      return null; // Không redirect
-    },
+    initialLocation: dashboard,
     routes: [
-      // Splash screen
-      GoRoute(
-        path: splash,
-        name: 'splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
-      
-      // Login screen
-      GoRoute(
-        path: login,
-        name: 'login',
-        builder: (context, state) => const LoginScreen(),
-      ),
-      
-      // Protected routes (cần đăng nhập)
       ShellRoute(
         builder: (context, state, child) {
           return AdminDashboardWrapper(child: child);
