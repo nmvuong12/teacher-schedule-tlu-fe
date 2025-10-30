@@ -7,7 +7,7 @@ import 'presentation/screen/splashScreen.dart';
 import 'presentation/screen/login.dart';
 import 'presentation/screen/forgot_password.dart';
 import 'presentation/screen/reset_password.dart';
-import 'presentation/screen/admin/admin_dashboard.dart';
+import 'presentation/screen/admin/dashboard_overview.dart';
 import 'presentation/screen/teacher/teacher_dashboard.dart';
 import 'presentation/screen/student/student_dashboard.dart';
 import 'data/model/user_model.dart';
@@ -46,42 +46,37 @@ class MyApp extends StatelessWidget {
 
           // 📱 Nếu là mobile → dùng routes truyền thống
           return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Hệ thống quản lý lịch trình giảng dạy',
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              fontFamily: 'Roboto',
-            ),
-            home: const SplashScreen(),
-            routes: {
-              '/login': (_) => const LoginScreen(),
-              '/forgot-password': (_) => const ForgotPasswordScreen(),
-              '/reset-password': (_) => const ResetPasswordScreen(),
-              '/admin': (_) => AdminDashboard(
-                user: UserModel(
-                  id: 0,
-                  username: '',
-                  email: '',
-                  role: 0,
-                ),
+              debugShowCheckedModeBanner: false,
+              title: 'Hệ thống quản lý lịch trình giảng dạy',
+              theme: ThemeData(
+                primarySwatch: Colors.blue,
+                fontFamily: 'Roboto',
               ),
-              '/teacher': (_) => TeacherDashboard(
-                user: UserModel(
-                  id: 0,
-                  username: '',
-                  email: '',
-                  role: 1,
-                ),
-              ),
-              '/student': (_) => StudentDashboard(
-                user: UserModel(
-                  id: 0,
-                  username: '',
-                  email: '',
-                  role: 2,
-                ),
-              ),
-            },
+              home: const SplashScreen(),
+              routes: {
+                '/login': (_) => const LoginScreen(),
+                '/forgot-password': (_) => const ForgotPasswordScreen(),
+                '/reset-password': (_) => const ResetPasswordScreen(),
+                    '/admin': (_) => AdminDashboardWrapper(
+              child: DashboardOverview(),
+          ),
+          '/teacher': (_) => TeacherDashboard(
+          user: UserModel(
+          id: 0,
+          username: '',
+          email: '',
+          role: 1,
+          ),
+          ),
+          '/student': (_) => StudentDashboard(
+          user: UserModel(
+          id: 0,
+          username: '',
+          email: '',
+          role: 2,
+          ),
+          ),
+        },
           );
         },
       ),

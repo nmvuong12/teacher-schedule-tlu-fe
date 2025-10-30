@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../presentation/controller/app_controller.dart';
+import '../presentation/screen/admin/leave_request_management.dart';
 import '../presentation/screen/admin/statistics_screen.dart';
 import '../presentation/screen/login.dart';
 import '../presentation/screen/splashScreen.dart';
@@ -18,82 +19,119 @@ import '../presentation/screen/admin/student_management.dart';
 import '../presentation/screen/admin/session_management.dart';
 import '../presentation/widget/admin_sidebar.dart';
 import '../presentation/widget/admin_header.dart';
-import '../presentation/screen/admin/leave_request_management.dart';
 
 class AppRouter {
-  static const String dashboard = '/';
-  static const String courses = '/courses';
-  static const String leaveRequests = '/leave-requests';
-  static const String statistics = '/statistics';
-  static const String users = '/users';
-  static const String classes = '/classes';
-  static const String subjects = '/subjects';
-  static const String teachers = '/teachers';
-  static const String students = '/students';
-  static const String sessions = '/sessions';
+static const String splash = '/';
+static const String login = '/login';
+static const String dashboard = '/dashboard';
+static const String courses = '/courses';
+static const String leaveRequests = '/leave-requests';
+static const String statistics = '/statistics';
+static const String users = '/users';
+static const String classes = '/classes';
+static const String subjects = '/subjects';
+static const String teachers = '/teachers';
+static const String students = '/students';
+static const String sessions = '/sessions';
 
-  static final GoRouter router = GoRouter(
-    initialLocation: dashboard,
-    routes: [
-      ShellRoute(
-        builder: (context, state, child) {
-          return AdminDashboardWrapper(child: child);
-        },
-        routes: [
-          GoRoute(
-            path: dashboard,
-            name: 'dashboard',
-            builder: (context, state) => const DashboardOverview(),
-          ),
-          GoRoute(
-            path: courses,
-            name: 'courses',
-            builder: (context, state) => const CourseManagement(),
-          ),
-          GoRoute(
-            path: leaveRequests,
-            name: 'leave-requests',
-            builder: (context, state) => const LeaveRequestManagement(),
-          ),
-          GoRoute(
-            path: statistics,
-            name: 'statistics',
-            builder: (context, state) => const StatisticsScreen(),
-          ),
-          GoRoute(
-            path: users,
-            name: 'users',
-            builder: (context, state) => const UserManagement(),
-          ),
-          GoRoute(
-            path: classes,
-            name: 'classes',
-            builder: (context, state) => const ClassManagement(),
-          ),
-          GoRoute(
-            path: subjects,
-            name: 'subjects',
-            builder: (context, state) => const SubjectManagement(),
-          ),
-          GoRoute(
-            path: teachers,
-            name: 'teachers',
-            builder: (context, state) => const TeacherManagement(),
-          ),
-          GoRoute(
-            path: students,
-            name: 'students',
-            builder: (context, state) => const StudentManagement(),
-          ),
-          GoRoute(
-            path: sessions,
-            name: 'sessions',
-            builder: (context, state) => const SessionManagement(),
-          ),
-        ],
-      ),
-    ],
-  );
+static final GoRouter router = GoRouter(
+initialLocation: splash,
+redirect: (context, state) async {
+// Chỉ redirect khi KHÔNG ở splash screen
+if (state.uri.path == splash) {
+return null; // Cho phép splash screen hiển thị
+}
+
+// Kiểm tra session cho các route khác
+final (token, user) = await SessionManager.loadSession();
+
+// Nếu đang ở login screen và đã đăng nhập, chuyển đến dashboard
+if (state.uri.path == login && token != null && user != null) {
+return dashboard;
+}
+
+// Nếu đang ở các route khác mà chưa đăng nhập, chuyển đến login
+if (state.uri.path != login && state.uri.path != splash && (token == null || user == null)) {
+return login;
+}
+
+return null; // Không redirect
+},
+routes: [
+// Splash screen
+GoRoute(
+path: splash,
+name: 'splash',
+builder: (context, state) => const SplashScreen(),
+),
+
+// Login screen
+GoRoute(
+path: login,
+name: 'login',
+builder: (context, state) => const LoginScreen(),
+),
+
+// Protected routes (cần đăng nhập)
+ShellRoute(
+builder: (context, state, child) {
+return AdminDashboardWrapper(child: child);
+},
+routes: [
+GoRoute(
+path: dashboard,
+name: 'dashboard',
+builder: (context, state) => const DashboardOverview(),
+),
+GoRoute(
+path: courses,
+name: 'courses',
+builder: (context, state) => const CourseManagement(),
+),
+GoRoute(
+path: leaveRequests,
+name: 'leave-requests',
+builder: (context, state) => const LeaveRequestManagement(),
+),
+GoRoute(
+path: statistics,
+name: 'statistics',
+builder: (context, state) => const StatisticsScreen(),
+),
+GoRoute(
+path: users,
+name: 'users',
+builder: (context, state) => const UserManagement(),
+),
+GoRoute(
+path: classes,
+name: 'classes',
+builder: (context, state) => const ClassManagement(),
+),
+GoRoute(
+path: subjects,
+name: 'subjects',
+builder: (context, state) => const SubjectManagement(),
+),
+GoRoute(
+path: teachers,
+name: 'teachers',
+builder: (context, state) => const TeacherManagement(),
+),
+GoRoute(
+path: students,
+name: 'students',
+builder: (context, state) => const StudentManagement(),
+),
+GoRoute(
+path: sessions,
+name: 'sessions',
+builder: (context, state) => const SessionManagement(),
+),
+],
+),
+],
+);
 }
 
 class AdminDashboardWrapper extends StatefulWidget {

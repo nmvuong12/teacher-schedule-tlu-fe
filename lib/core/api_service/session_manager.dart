@@ -40,7 +40,3 @@ class SessionManager {
     // Có thể thêm logic khác như gọi API logout nếu cần
   }
 }
-
-
-
-
