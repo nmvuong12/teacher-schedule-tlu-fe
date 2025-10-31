@@ -1,9 +1,13 @@
+// [leave_request_management.dart] - ĐÂY LÀ FILE ĐÃ SỬA LỖI IMPORT
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:data_table_2/data_table_2.dart';
 import '../../controller/app_controller.dart';
-import '../../../data/model/models.dart';
+
+// [SỬA] - Ẩn 'Session' xung đột từ 'models.dart' và import 'session_model.dart'
+import '../../../data/model/models.dart' hide Session;
+import '../../../data/model/session_model.dart';
 
 class LeaveRequestManagement extends StatefulWidget {
   const LeaveRequestManagement({super.key});
@@ -44,7 +48,7 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Search and filter
               Row(
                 children: [
@@ -121,7 +125,7 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Leave requests table
               Expanded(
                 child: Card(
@@ -134,149 +138,150 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
                     child: controller.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : Builder(builder: (context) {
-                            final all = controller.filteredTeachingLeaves.where((leave) {
-                              if (_searchController.text.isEmpty) return true;
-                              final query = _searchController.text.toLowerCase();
-                              return leave.reason.toLowerCase().contains(query);
-                            }).toList();
-                            final total = all.length;
-                            final pageCount = (total / _rowsPerPage).ceil();
-                            if (_currentPage >= pageCount) {
-                              _currentPage = 0;
-                            }
-                            int startIndex = _currentPage * _rowsPerPage;
-                            if (startIndex < 0) startIndex = 0;
-                            if (startIndex > total) startIndex = total;
-                            final rawEnd = startIndex + _rowsPerPage;
-                            final endIndex = rawEnd > total ? total : rawEnd;
-                            final pageItems = all.sublist(startIndex, endIndex);
+                      final all = controller.filteredTeachingLeaves.where((leave) {
+                        if (_searchController.text.isEmpty) return true;
+                        final query = _searchController.text.toLowerCase();
+                        return leave.reason.toLowerCase().contains(query);
+                      }).toList();
+                      final total = all.length;
+                      final pageCount = (total / _rowsPerPage).ceil();
+                      if (_currentPage >= pageCount) {
+                        _currentPage = 0;
+                      }
+                      int startIndex = _currentPage * _rowsPerPage;
+                      if (startIndex < 0) startIndex = 0;
+                      if (startIndex > total) startIndex = total;
+                      final rawEnd = startIndex + _rowsPerPage;
+                      final endIndex = rawEnd > total ? total : rawEnd;
+                      final pageItems = all.sublist(startIndex, endIndex);
 
-                            return Column(
-                              children: [
-                                Expanded(
-                                  child: DataTable2(
-                                    columnSpacing: 12,
-                                    horizontalMargin: 12,
-                                    minWidth: 1000,
-                                    columns: const [
-                                      DataColumn2(
-                                        label: Text('Giảng viên'),
-                                        size: ColumnSize.M,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Học phần'),
-                                        size: ColumnSize.M,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Ngày nghỉ'),
-                                        size: ColumnSize.L,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Ngày dạy bù'),
-                                        size: ColumnSize.L,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Lý do'),
-                                        size: ColumnSize.L,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Trạng thái'),
-                                        size: ColumnSize.S,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Thao tác'),
-                                        size: ColumnSize.S,
-                                      ),
-                                    ],
-                                    rows: pageItems.map((leave) {
-                              // Find related session and course section data
-                              final session = controller.sessions.firstWhere(
-                                (s) => s.sessionId == leave.sessionId,
-                                orElse: () => Session(
-                                  sessionId: leave.sessionId,
-                                  sectionId: 0,
-                                  date: DateTime.now(),
-                                  classroom: 'N/A',
-                                  status: 'N/A',
-                                  content: 'N/A',
-                                  label: 'N/A',
-                                  startTime: DateTime.now(),
-                                  endTime: DateTime.now(),
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: DataTable2(
+                              columnSpacing: 12,
+                              horizontalMargin: 12,
+                              minWidth: 1000,
+                              columns: const [
+                                DataColumn2(
+                                  label: Text('Giảng viên'),
+                                  size: ColumnSize.M,
                                 ),
-                              );
-                              
-                              final courseSection = controller.courseSections.firstWhere(
-                                (cs) => cs.sectionId == session.sectionId,
-                                orElse: () => CourseSection(
-                                  sectionId: session.sectionId,
-                                  classId: 0,
-                                  className: 'N/A',
-                                  subjectId: 0,
-                                  subjectName: 'N/A',
-                                  semester: 'N/A',
-                                  shift: 'N/A',
-                                  startDate: DateTime.now(),
-                                  endDate: DateTime.now(),
-                                  weeklySessions: 'N/A',
-                                  teacherId: 0,
-                                  teacherName: 'N/A',
+                                DataColumn2(
+                                  label: Text('Học phần'),
+                                  size: ColumnSize.M,
                                 ),
-                              );
-                              
-                              final teacher = controller.teachers.firstWhere(
-                                (t) => t.teacherId == courseSection.teacherId,
-                                orElse: () => Teacher(
-                                  teacherId: courseSection.teacherId,
-                                  userId: 0,
-                                  userName: 'N/A',
-                                  department: 'N/A',
-                                  totalTeachingHours: 0,
+                                DataColumn2(
+                                  label: Text('Ngày nghỉ'),
+                                  size: ColumnSize.L,
                                 ),
-                              );
+                                DataColumn2(
+                                  label: Text('Ngày dạy bù'),
+                                  size: ColumnSize.L,
+                                ),
+                                DataColumn2(
+                                  label: Text('Lý do'),
+                                  size: ColumnSize.L,
+                                ),
+                                DataColumn2(
+                                  label: Text('Trạng thái'),
+                                  size: ColumnSize.S,
+                                ),
+                                DataColumn2(
+                                  label: Text('Thao tác'),
+                                  size: ColumnSize.S,
+                                ),
+                              ],
+                              rows: pageItems.map((leave) {
+                                // Find related session and course section data
+                                final session = controller.sessions.firstWhere(
+                                      (s) => s.sessionId == leave.sessionId,
+                                  // 'Session' ở đây giờ đã là 'Session' từ 'session_model.dart'
+                                  orElse: () => Session(
+                                    sessionId: leave.sessionId,
+                                    sectionId: 0,
+                                    date: DateTime.now(),
+                                    classroom: 'N/A',
+                                    status: 'N/A',
+                                    content: 'N/A',
+                                    label: 'N/A',
+                                    startTime: DateTime.now(),
+                                    endTime: DateTime.now(),
+                                  ),
+                                );
 
-                              return DataRow2(
-                                cells: [
-                                  DataCell(Text(teacher.userName)),
-                                  DataCell(Text('${courseSection.subjectName} - ${courseSection.className}')),
-                                  DataCell(Text('${_formatDate(session.date)}, ${session.timeRange}\nPhòng: ${session.classroom}')),
-                                  DataCell(Text('${_formatDate(leave.expectedMakeupDate)}\nDạy bù')),
-                                  DataCell(Text('${leave.reason}\nGửi: ${_formatDate(DateTime.now())}')),
-                                  DataCell(_buildStatusChip(leave.status)),
-                                  DataCell(
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (leave.status == 0) // Chờ duyệt
-                                            IconButton(
-                                              icon: const FaIcon(FontAwesomeIcons.check, size: 14, color: Colors.green),
-                                              onPressed: () => _approveLeave(leave),
-                                            ),
-                                          if (leave.status == 0) // Chờ duyệt
-                                            IconButton(
-                                              icon: const FaIcon(FontAwesomeIcons.x, size: 14, color: Colors.red),
-                                              onPressed: () => _rejectLeave(leave),
-                                            ),
-                                          if (leave.status != 0) // Không phải chờ duyệt
-                                            IconButton(
-                                              icon: const FaIcon(FontAwesomeIcons.trash, size: 14, color: Colors.red),
-                                              onPressed: () => _showDeleteConfirmDialog(context, leave),
-                                            ),
-                                        ],
+                                final courseSection = controller.courseSections.firstWhere(
+                                      (cs) => cs.sectionId == session.sectionId,
+                                  orElse: () => CourseSection(
+                                    sectionId: session.sectionId,
+                                    classId: 0,
+                                    className: 'N/A',
+                                    subjectId: 0,
+                                    subjectName: 'N/A',
+                                    semester: 'N/A',
+                                    shift: 'N/A',
+                                    startDate: DateTime.now(),
+                                    endDate: DateTime.now(),
+                                    weeklySessions: 'N/A',
+                                    teacherId: 0,
+                                    teacherName: 'N/A',
+                                  ),
+                                );
+
+                                final teacher = controller.teachers.firstWhere(
+                                      (t) => t.teacherId == courseSection.teacherId,
+                                  orElse: () => Teacher(
+                                    teacherId: courseSection.teacherId,
+                                    userId: 0,
+                                    userName: 'N/A',
+                                    department: 'N/A',
+                                    totalTeachingHours: 0,
+                                  ),
+                                );
+
+                                return DataRow2(
+                                  cells: [
+                                    DataCell(Text(teacher.userName)),
+                                    DataCell(Text('${courseSection.subjectName} - ${courseSection.className}')),
+                                    DataCell(Text('${_formatDate(session.date)}, ${session.timeRange}\nPhòng: ${session.classroom}')),
+                                    DataCell(Text('${_formatDate(leave.expectedMakeupDate)}\nDạy bù')),
+                                    DataCell(Text('${leave.reason}\nGửi: ${_formatDate(DateTime.now())}')),
+                                    DataCell(_buildStatusChip(leave.status)),
+                                    DataCell(
+                                      SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (leave.status == 0) // Chờ duyệt
+                                              IconButton(
+                                                icon: const FaIcon(FontAwesomeIcons.check, size: 14, color: Colors.green),
+                                                onPressed: () => _approveLeave(leave),
+                                              ),
+                                            if (leave.status == 0) // Chờ duyệt
+                                              IconButton(
+                                                icon: const FaIcon(FontAwesomeIcons.x, size: 14, color: Colors.red),
+                                                onPressed: () => _rejectLeave(leave),
+                                              ),
+                                            if (leave.status != 0) // Không phải chờ duyệt
+                                              IconButton(
+                                                icon: const FaIcon(FontAwesomeIcons.trash, size: 14, color: Colors.red),
+                                                onPressed: () => _showDeleteConfirmDialog(context, leave),
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                _buildPaginationBar(total),
-                              ],
-                            );
-                          }),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildPaginationBar(total),
+                        ],
+                      );
+                    }),
                   ),
                 ),
               ),
@@ -291,7 +296,7 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
     final totalPages = (total / _rowsPerPage).ceil();
     final startItem = _currentPage * _rowsPerPage + 1;
     final endItem = ((_currentPage + 1) * _rowsPerPage).clamp(0, total);
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -312,7 +317,7 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
               fontSize: 14,
             ),
           ),
-          
+
           // Right side - Controls
           Row(
             children: [
@@ -346,16 +351,16 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
                 },
               ),
               const SizedBox(width: 16),
-              
+
               // Navigation controls
               IconButton(
                 icon: const FaIcon(FontAwesomeIcons.chevronLeft, size: 16),
                 onPressed: _currentPage > 0
                     ? () {
-                        setState(() {
-                          _currentPage--;
-                        });
-                      }
+                  setState(() {
+                    _currentPage--;
+                  });
+                }
                     : null,
                 style: IconButton.styleFrom(
                   foregroundColor: _currentPage > 0 ? Colors.blue : Colors.grey,
@@ -375,10 +380,10 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
                 icon: const FaIcon(FontAwesomeIcons.chevronRight, size: 16),
                 onPressed: (_currentPage + 1) < totalPages
                     ? () {
-                        setState(() {
-                          _currentPage++;
-                        });
-                      }
+                  setState(() {
+                    _currentPage++;
+                  });
+                }
                     : null,
                 style: IconButton.styleFrom(
                   foregroundColor: (_currentPage + 1) < totalPages ? Colors.blue : Colors.grey,

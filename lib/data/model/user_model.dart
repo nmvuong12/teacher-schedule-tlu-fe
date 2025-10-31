@@ -1,6 +1,10 @@
+import 'dart:convert'; // Import này cần cho LoginResponse (nếu dùng http)
+
 class UserModel {
   final int id;
+  final int? teacherId;
   final String username;
+  final String? password; // [SỬA 1] - Thêm password (giống code cũ)
   final String email;
   final int role;
   final String? fullName;
@@ -10,7 +14,9 @@ class UserModel {
 
   UserModel({
     required this.id,
+    this.teacherId,
     required this.username,
+    this.password, // [SỬA 2] - Thêm password vào constructor
     required this.email,
     required this.role,
     this.fullName,
@@ -23,14 +29,12 @@ class UserModel {
     print('🔍 DEBUG: UserModel.fromJson called with: $json');
 
     return UserModel(
-      // Handles keys 'userId' or 'id'
       id: json['userId'] ?? json['id'] ?? 0,
-      // Handles keys 'userName' or 'username'
+      teacherId: json['teacherId'],
       username: json['userName'] ?? json['username'] ?? '',
+      password: json['password'], // [SỬA 3] - Đọc password (dù server thường không gửi)
       email: json['email'] ?? '',
-      // Default to teacher (1) if role is missing
       role: json['role'] ?? 1,
-      // Handles keys 'fullName', 'full_name', or 'name'
       fullName: json['fullName'] ?? json['full_name'] ?? json['name'],
       department: json['department'],
       phone: json['phone'],
@@ -39,8 +43,9 @@ class UserModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> json = {
       'id': id,
+      'teacherId': teacherId,
       'username': username,
       'email': email,
       'role': role,
@@ -49,6 +54,14 @@ class UserModel {
       'phone': phone,
       'isActive': isActive,
     };
+
+    // [SỬA 4] - Chỉ thêm password vào JSON nếu nó được cung cấp
+    // (Giống logic code cũ)
+    if (password != null && password!.isNotEmpty) {
+      json['password'] = password;
+    }
+
+    return json;
   }
 
   bool get isAdmin => role == 0;
@@ -68,6 +81,8 @@ class UserModel {
     }
   }
 }
+
+// ... (LoginRequest và LoginResponse giữ nguyên) ...
 
 // Lớp dùng để định nghĩa payload gửi đi khi đăng nhập
 class LoginRequest {
@@ -105,23 +120,18 @@ class LoginResponse {
     print('🔍 DEBUG: LoginResponse.fromJson called with: $json');
 
     UserModel? user;
-    // Kiểm tra các key phổ biến chứa đối tượng người dùng
     if (json['user'] != null) {
       user = UserModel.fromJson(json['user']);
     } else if (json['data'] != null) {
       user = UserModel.fromJson(json['data']);
     } else if (json.containsKey('id') || json.containsKey('userId')) {
-      // Nếu phản hồi là đối tượng người dùng trực tiếp
       user = UserModel.fromJson(json);
     }
 
     return LoginResponse(
-      // Kiểm tra các key phổ biến xác định thành công
       success: json['success'] ?? json['status'] == 'success' ?? !json.containsKey('error'),
-      // Kiểm tra các key phổ biến chứa thông báo
       message: json['message'] ?? json['msg'] ?? json['error'],
       user: user,
-      // Kiểm tra các key phổ biến chứa token
       token: json['token'] ?? json['access_token'],
     );
   }

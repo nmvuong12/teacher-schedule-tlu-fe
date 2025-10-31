@@ -135,7 +135,7 @@ class _SessionManagementState extends State<SessionManagement> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Search and Filter
               Row(
                 children: [
@@ -194,7 +194,7 @@ class _SessionManagementState extends State<SessionManagement> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Filter info
               if (_selectedFilter != 'all')
                 Container(
@@ -229,7 +229,7 @@ class _SessionManagementState extends State<SessionManagement> {
                   ),
                 ),
               const SizedBox(height: 16),
-              
+
               // Sessions table
               Expanded(
                 child: Card(
@@ -244,20 +244,20 @@ class _SessionManagementState extends State<SessionManagement> {
                         : Builder(builder: (context) {
                             final now = DateTime.now();
                             final today = DateTime(now.year, now.month, now.day);
-                            
+
                             final all = controller.sessions.where((session) {
                               // Text search filter
                               if (_searchController.text.isNotEmpty) {
                                 final query = _searchController.text.toLowerCase();
-                                final sectionName = session.sectionName ?? session.subjectName ?? '';
-                                if (!session.content.toLowerCase().contains(query) &&
+                                final sectionName = session.className ?? session.subjectName ?? '';
+                                if (!(session.content ?? '').toLowerCase().contains(query) &&
                                     !session.classroom.toLowerCase().contains(query) &&
-                                    !session.label.toLowerCase().contains(query) &&
+                                    !(session.label ?? '').toLowerCase().contains(query) &&
                                     !sectionName.toLowerCase().contains(query)) {
                                   return false;
                                 }
                               }
-                              
+
                               // Date filter
                               final sessionDate = DateTime(session.date.year, session.date.month, session.date.day);
                               switch (_selectedFilter) {
@@ -336,12 +336,12 @@ class _SessionManagementState extends State<SessionManagement> {
                                     rows: pageItems.asMap().entries.map((entry) {
                                       final index = entry.key;
                                       final session = entry.value;
-                                      final sectionName = session.sectionName ?? session.subjectName ?? 'N/A';
+                                      final sectionName = session.className ?? session.subjectName ?? '';
                                       final stt = startIndex + index + 1;
-                                      
+
                                       // Format date as dd/MM/yyyy
                                       final dateStr = '${session.date.day.toString().padLeft(2, '0')}/${session.date.month.toString().padLeft(2, '0')}/${session.date.year}';
-                                      
+
                                       return DataRow2(
                                         cells: [
                                           DataCell(Text(stt.toString())),
@@ -356,7 +356,7 @@ class _SessionManagementState extends State<SessionManagement> {
                                           ),
                                           DataCell(Text(dateStr)),
                                           DataCell(Text(session.classroom)),
-                                          DataCell(Text(session.content)),
+                                          DataCell(Text(session.content ?? '')),
                                           DataCell(Text(session.timeRange)),
                                           DataCell(_buildStatusChip(session.status)),
                                           DataCell(

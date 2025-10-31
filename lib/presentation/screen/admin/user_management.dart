@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:data_table_2/data_table_2.dart';
 import '../../controller/app_controller.dart';
-import '../../../data/model/models.dart';
+// [SỬA 1] - Ẩn User (cũ)
+import '../../../data/model/models.dart' hide User;
+import '../../../data/model/user_model.dart'; // Import UserModel (mới)
 import '../../widget/user_form.dart';
 
 class UserManagement extends StatefulWidget {
@@ -56,7 +58,7 @@ class _UserManagementState extends State<UserManagement> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Search
               Row(
                 children: [
@@ -89,7 +91,7 @@ class _UserManagementState extends State<UserManagement> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Users table
               Expanded(
                 child: Card(
@@ -102,95 +104,101 @@ class _UserManagementState extends State<UserManagement> {
                     child: controller.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : Builder(builder: (context) {
-                            final all = controller.users.where((user) {
-                              if (_searchController.text.isEmpty) return true;
-                              final query = _searchController.text.toLowerCase();
-                              return user.userName.toLowerCase().contains(query) ||
-                                     user.fullName.toLowerCase().contains(query) ||
-                                     user.email.toLowerCase().contains(query);
-                            }).toList();
-                            final total = all.length;
-                            final pageCount = (total / _rowsPerPage).ceil();
-                            if (_currentPage >= pageCount) {
-                              _currentPage = 0;
-                            }
-                            int startIndex = _currentPage * _rowsPerPage;
-                            if (startIndex < 0) startIndex = 0;
-                            if (startIndex > total) startIndex = total;
-                            final rawEnd = startIndex + _rowsPerPage;
-                            final endIndex = rawEnd > total ? total : rawEnd;
-                            final pageItems = all.sublist(startIndex, endIndex);
+                      // [SỬA 2] - Đảm bảo đang dùng controller.users (List<UserModel>)
+                      final all = controller.users.where((user) {
+                        if (_searchController.text.isEmpty) return true;
+                        final query = _searchController.text.toLowerCase();
+                        // [SỬA 3] - Đổi 'userName' -> 'username'
+                        // [SỬA 4] - Thêm '?? ''' cho 'fullName' (null-safety)
+                        return user.username.toLowerCase().contains(query) ||
+                            (user.fullName ?? '').toLowerCase().contains(query) ||
+                            user.email.toLowerCase().contains(query);
+                      }).toList();
+                      final total = all.length;
+                      final pageCount = (total / _rowsPerPage).ceil();
+                      if (_currentPage >= pageCount) {
+                        _currentPage = 0;
+                      }
+                      int startIndex = _currentPage * _rowsPerPage;
+                      if (startIndex < 0) startIndex = 0;
+                      if (startIndex > total) startIndex = total;
+                      final rawEnd = startIndex + _rowsPerPage;
+                      final endIndex = rawEnd > total ? total : rawEnd;
+                      final pageItems = all.sublist(startIndex, endIndex);
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: DataTable2(
-                                    columnSpacing: 12,
-                                    horizontalMargin: 12,
-                                    minWidth: 800,
-                                    columns: const [
-                                      DataColumn2(
-                                        label: Text('ID'),
-                                        size: ColumnSize.S,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Tên đăng nhập'),
-                                        size: ColumnSize.M,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Họ tên'),
-                                        size: ColumnSize.L,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Email'),
-                                        size: ColumnSize.L,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Vai trò'),
-                                        size: ColumnSize.M,
-                                      ),
-                                      DataColumn2(
-                                        label: Text('Thao tác'),
-                                        size: ColumnSize.S,
-                                      ),
-                                    ],
-                                    rows: pageItems.map((user) {
-                                      return DataRow2(
-                                        cells: [
-                                          DataCell(Text(user.userId?.toString() ?? 'N/A')),
-                                          DataCell(Text(user.userName)),
-                                          DataCell(Text(user.fullName)),
-                                          DataCell(Text(user.email)),
-                                          DataCell(_buildRoleChip(user.roleName)),
-                                          DataCell(
-                                            SingleChildScrollView(
-                                              scrollDirection: Axis.horizontal,
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  IconButton(
-                                                    icon: const FaIcon(FontAwesomeIcons.pen, size: 14),
-                                                    onPressed: () => _showEditUserDialog(context, user),
-                                                  ),
-                                                  IconButton(
-                                                    icon: const FaIcon(FontAwesomeIcons.trash, size: 14, color: Colors.red),
-                                                    onPressed: () => _showDeleteConfirmDialog(context, user),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    }).toList(),
-                                  ),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: DataTable2(
+                              columnSpacing: 12,
+                              horizontalMargin: 12,
+                              minWidth: 800,
+                              columns: const [
+                                DataColumn2(
+                                  label: Text('ID'),
+                                  size: ColumnSize.S,
                                 ),
-                                const SizedBox(height: 8),
-                                _buildPaginationBar(total),
+                                DataColumn2(
+                                  label: Text('Tên đăng nhập'),
+                                  size: ColumnSize.M,
+                                ),
+                                DataColumn2(
+                                  label: Text('Họ tên'),
+                                  size: ColumnSize.L,
+                                ),
+                                DataColumn2(
+                                  label: Text('Email'),
+                                  size: ColumnSize.L,
+                                ),
+                                DataColumn2(
+                                  label: Text('Vai trò'),
+                                  size: ColumnSize.M,
+                                ),
+                                DataColumn2(
+                                  label: Text('Thao tác'),
+                                  size: ColumnSize.S,
+                                ),
                               ],
-                            );
-                          }),
+                              rows: pageItems.map((user) {
+                                return DataRow2(
+                                  cells: [
+                                    // [SỬA 5] - Đổi 'userId' -> 'id'
+                                    DataCell(Text(user.id.toString())),
+                                    // [SỬA 6] - Đổi 'userName' -> 'username'
+                                    DataCell(Text(user.username)),
+                                    // [SỬA 7] - Thêm '?? 'N/A'' (null-safety)
+                                    DataCell(Text(user.fullName ?? 'N/A')),
+                                    DataCell(Text(user.email)),
+                                    DataCell(_buildRoleChip(user.roleName)),
+                                    DataCell(
+                                      SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const FaIcon(FontAwesomeIcons.pen, size: 14),
+                                              onPressed: () => _showEditUserDialog(context, user),
+                                            ),
+                                            IconButton(
+                                              icon: const FaIcon(FontAwesomeIcons.trash, size: 14, color: Colors.red),
+                                              onPressed: () => _showDeleteConfirmDialog(context, user),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildPaginationBar(total),
+                        ],
+                      );
+                    }),
                   ),
                 ),
               ),
@@ -203,14 +211,15 @@ class _UserManagementState extends State<UserManagement> {
 
   Widget _buildRoleChip(String role) {
     Color color;
+    // [SỬA 8] - Cập nhật vai trò theo UserModel (mới)
     switch (role) {
-      case 'Administrator':
+      case 'Admin':
         color = Colors.red;
         break;
-      case 'Teacher':
+      case 'Giảng viên':
         color = Colors.blue;
         break;
-      case 'Student':
+      case 'Sinh viên':
         color = Colors.green;
         break;
       default:
@@ -238,7 +247,7 @@ class _UserManagementState extends State<UserManagement> {
     final totalPages = (total / _rowsPerPage).ceil();
     final showingStart = total == 0 ? 0 : _currentPage * _rowsPerPage + 1;
     final showingEnd = ((
-      (_currentPage + 1) * _rowsPerPage
+        (_currentPage + 1) * _rowsPerPage
     ) > total ? total : ((_currentPage + 1) * _rowsPerPage));
 
     return Row(
@@ -269,10 +278,10 @@ class _UserManagementState extends State<UserManagement> {
               icon: const FaIcon(FontAwesomeIcons.chevronLeft, size: 16),
               onPressed: _currentPage > 0
                   ? () {
-                      setState(() {
-                        _currentPage--;
-                      });
-                    }
+                setState(() {
+                  _currentPage--;
+                });
+              }
                   : null,
             ),
             Text('${totalPages == 0 ? 0 : _currentPage + 1}/$totalPages'),
@@ -280,10 +289,10 @@ class _UserManagementState extends State<UserManagement> {
               icon: const FaIcon(FontAwesomeIcons.chevronRight, size: 16),
               onPressed: (_currentPage + 1) < totalPages
                   ? () {
-                      setState(() {
-                        _currentPage++;
-                      });
-                    }
+                setState(() {
+                  _currentPage++;
+                });
+              }
                   : null,
             ),
           ],
@@ -297,10 +306,14 @@ class _UserManagementState extends State<UserManagement> {
     showDialog(
       context: outerContext,
       builder: (dialogCtx) => UserForm(
-        onSubmit: (user) async {
+        // [SỬA 9] - Đổi 'user:' (cũ) thành 'userModel:' (mới)
+        // (LƯU Ý: Tên thuộc tính này phải khớp với file user_form.dart)
+        userModel: null, // Truyền null để thêm mới
+        onSubmit: (user) async { // user ở đây là UserModel (mới)
           bool ok = false;
           String errorMessage = 'Thêm người dùng thất bại';
           try {
+            // [SỬA 10] - Giờ đây 'user' đã là UserModel (mới)
             ok = await outerContext.read<AppController>().createUser(user);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -316,16 +329,19 @@ class _UserManagementState extends State<UserManagement> {
     );
   }
 
-  void _showEditUserDialog(BuildContext context, User user) {
+  // [SỬA 11] - Đổi tham số từ User -> UserModel
+  void _showEditUserDialog(BuildContext context, UserModel user) {
     final outerContext = context;
     showDialog(
       context: outerContext,
       builder: (dialogCtx) => UserForm(
-        user: user,
-        onSubmit: (updatedUser) async {
+        // [SỬA 12] - Đổi 'user:' (cũ) thành 'userModel:' (mới)
+        userModel: user,
+        onSubmit: (updatedUser) async { // updatedUser là UserModel (mới)
           bool ok = false;
           String errorMessage = 'Cập nhật người dùng thất bại';
           try {
+            // [SỬA 13] - Giờ đây 'updatedUser' đã là UserModel (mới)
             ok = await outerContext.read<AppController>().updateUser(updatedUser);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -341,13 +357,15 @@ class _UserManagementState extends State<UserManagement> {
     );
   }
 
-  void _showDeleteConfirmDialog(BuildContext context, User user) {
+  // [SỬA 14] - Đổi tham số từ User -> UserModel
+  void _showDeleteConfirmDialog(BuildContext context, UserModel user) {
     final outerContext = context;
     showDialog(
       context: outerContext,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa người dùng "${user.userName}"?'),
+        // [SỬA 15] - Đổi 'userName' -> 'username'
+        content: Text('Bạn có chắc chắn muốn xóa người dùng "${user.username}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
@@ -358,9 +376,9 @@ class _UserManagementState extends State<UserManagement> {
               bool ok = false;
               String errorMessage = 'Xóa người dùng thất bại';
               try {
-                if (user.userId != null) {
-                  ok = await outerContext.read<AppController>().deleteUser(user.userId!);
-                }
+                // [SỬA 16] - Đổi 'userId' -> 'id'
+                // (id là int, không phải int?)
+                ok = await outerContext.read<AppController>().deleteUser(user.id);
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
               }

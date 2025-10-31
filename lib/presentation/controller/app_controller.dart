@@ -1,11 +1,15 @@
+// [app_controller.dart] - ĐÂY LÀ FILE ĐÃ SỬA
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/api_service/api_service.dart';
-import '../../data/model/models.dart';
+// [SỬA 1] - Ẩn User và Session (cũ)
+import '../../data/model/models.dart' hide User, Session;
+import '../../data/model/user_model.dart';
+import '../../data/model/session_model.dart'; // Import Session (mới)
 
 class AppController extends ChangeNotifier {
   // Authentication
-  User? _currentUser;
+  UserModel? _currentUser;
   bool _isLoggedIn = true; // Always logged in for demo
   bool _isLoading = false;
 
@@ -17,14 +21,20 @@ class AppController extends ChangeNotifier {
   List<Subject> _subjects = [];
   List<SchoolClass> _classes = [];
   List<Student> _students = [];
-  List<User> _users = [];
+  List<UserModel> _users = []; // [SỬA 2] - Đổi sang UserModel
 
   // Search and filters
   String _searchKeyword = '';
   String _selectedStatus = 'Tất cả trạng thái';
 
   // Getters
-  User? get currentUser => _currentUser;
+  UserModel? get currentUser => _currentUser;
+
+  set currentUser(UserModel? user) {
+    _currentUser = user;
+    notifyListeners();
+  }
+
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
   List<CourseSection> get courseSections => _courseSections;
@@ -34,59 +44,49 @@ class AppController extends ChangeNotifier {
   List<Subject> get subjects => _subjects;
   List<SchoolClass> get classes => _classes;
   List<Student> get students => _students;
-  List<User> get users => _users;
+  List<UserModel> get users => _users; // [SỬA 3] - Đổi sang UserModel
   String get searchKeyword => _searchKeyword;
   String get selectedStatus => _selectedStatus;
 
-  // Dashboard statistics
+  // (Các hàm getters thống kê, todaySessions, recentLeaveRequests... giữ nguyên)
+  // ...
   int get totalCourses => _courseSections.length;
   int get totalTeachers => _teachers.length;
   int get pendingLeaveRequests => _teachingLeaves.where((leave) => leave.status == 0).length;
   int get progressWarnings => _sessions.where((session) => session.status == 'Đang diễn ra').length;
-
-  // Today's sessions
   List<Session> get todaySessions {
     final today = DateTime.now();
     return _sessions.where((session) {
       return session.date.year == today.year &&
-             session.date.month == today.month &&
-             session.date.day == today.day;
+          session.date.month == today.month &&
+          session.date.day == today.day;
     }).toList();
   }
-
-  // Recent leave requests
   List<TeachingLeave> get recentLeaveRequests {
     final sortedLeaves = List<TeachingLeave>.from(_teachingLeaves);
     sortedLeaves.sort((a, b) => b.expectedMakeupDate.compareTo(a.expectedMakeupDate));
     return sortedLeaves.take(5).toList();
   }
-
-  // Filtered course sections
   List<CourseSection> get filteredCourseSections {
     if (_searchKeyword.isEmpty) return _courseSections;
     return _courseSections.where((section) {
       return section.subjectName.toLowerCase().contains(_searchKeyword.toLowerCase()) ||
-             section.className.toLowerCase().contains(_searchKeyword.toLowerCase()) ||
-             section.teacherName.toLowerCase().contains(_searchKeyword.toLowerCase());
+          section.className.toLowerCase().contains(_searchKeyword.toLowerCase()) ||
+          section.teacherName.toLowerCase().contains(_searchKeyword.toLowerCase());
     }).toList();
   }
-
-  // Filtered teaching leaves
   List<TeachingLeave> get filteredTeachingLeaves {
     List<TeachingLeave> filtered = _teachingLeaves;
-    
     if (_searchKeyword.isNotEmpty) {
       filtered = filtered.where((leave) {
         return leave.reason.toLowerCase().contains(_searchKeyword.toLowerCase());
       }).toList();
     }
-    
     if (_selectedStatus != 'Tất cả trạng thái') {
       filtered = filtered.where((leave) {
         return leave.statusName == _selectedStatus;
       }).toList();
     }
-    
     return filtered;
   }
 
@@ -94,16 +94,6 @@ class AppController extends ChangeNotifier {
   Future<void> initialize() async {
     _setLoading(true);
     try {
-      // Set demo user
-      _currentUser = User(
-        userId: 1,
-        userName: 'admin',
-        password: '',
-        fullName: 'Administrator',
-        email: 'admin@example.com',
-        role: 1,
-      );
-      
       await loadInitialData();
     } catch (e) {
       print('Error initializing app: $e');
@@ -115,7 +105,7 @@ class AppController extends ChangeNotifier {
   // Data loading methods
   Future<void> loadInitialData() async {
     if (!_isLoggedIn) return;
-    
+
     _setLoading(true);
     try {
       await Future.wait([
@@ -137,7 +127,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadCourseSections() async {
     try {
-      final data = await ApiService.getCourseSections();
+      final data = await ApiService.instance.getCourseSections();
       _courseSections = data.map((json) => CourseSection.fromJson(json)).toList();
       notifyListeners();
     } catch (e) {
@@ -147,7 +137,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadTeachingLeaves() async {
     try {
-      final data = await ApiService.getTeachingLeaves();
+      final data = await ApiService.instance.getTeachingLeaves();
       _teachingLeaves = data.map((json) => TeachingLeave.fromJson(json)).toList();
       notifyListeners();
     } catch (e) {
@@ -157,7 +147,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadSessions() async {
     try {
-      final data = await ApiService.getSessions();
+      final data = await ApiService.instance.getSessions();
       _sessions = data.map((json) => Session.fromJson(json)).toList();
       notifyListeners();
     } catch (e) {
@@ -168,7 +158,7 @@ class AppController extends ChangeNotifier {
   // CRUD for Sessions
   Future<bool> createSession(Session session) async {
     try {
-      await ApiService.createSession(session.toJson());
+      await ApiService.instance.createSession(session.toJson());
       await loadSessions();
       return true;
     } catch (e) {
@@ -180,7 +170,7 @@ class AppController extends ChangeNotifier {
   Future<bool> updateSession(Session session) async {
     try {
       if (session.sessionId != null) {
-        await ApiService.updateSession(session.sessionId!, session.toJson());
+        await ApiService.instance.updateSession(session.sessionId!, session.toJson());
         await loadSessions();
         return true;
       }
@@ -193,7 +183,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteSession(int sessionId) async {
     try {
-      await ApiService.deleteSession(sessionId);
+      await ApiService.instance.deleteSession(sessionId);
       await loadSessions();
       return true;
     } catch (e) {
@@ -204,8 +194,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadTeachers() async {
     try {
-      final data = await ApiService.getTeachers();
-      _teachers = data.map((json) => Teacher.fromJson(json)).toList();
+      _teachers = await ApiService.instance.getTeachers();
       notifyListeners();
     } catch (e) {
       print('Error loading teachers: $e');
@@ -215,7 +204,7 @@ class AppController extends ChangeNotifier {
   // Teacher CRUD
   Future<bool> createTeacher(Teacher teacher) async {
     try {
-      await ApiService.createTeacher(teacher.toJson());
+      await ApiService.instance.createTeacher(teacher);
       await loadTeachers();
       return true;
     } catch (e) {
@@ -227,7 +216,7 @@ class AppController extends ChangeNotifier {
   Future<bool> updateTeacher(Teacher teacher) async {
     try {
       if (teacher.teacherId != null) {
-        await ApiService.updateTeacher(teacher.teacherId!, teacher.toJson());
+        await ApiService.instance.updateTeacher(teacher.teacherId!, teacher.toJson());
         await loadTeachers();
         return true;
       }
@@ -240,7 +229,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteTeacher(int teacherId) async {
     try {
-      await ApiService.deleteTeacher(teacherId);
+      await ApiService.instance.deleteTeacher(teacherId);
       await loadTeachers();
       return true;
     } catch (e) {
@@ -251,7 +240,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadSubjects() async {
     try {
-      final data = await ApiService.getSubjects();
+      final data = await ApiService.instance.getSubjects();
       _subjects = data.map((json) => Subject.fromJson(json)).toList();
       notifyListeners();
     } catch (e) {
@@ -262,7 +251,7 @@ class AppController extends ChangeNotifier {
   // Subject CRUD
   Future<bool> createSubject(Subject subject) async {
     try {
-      await ApiService.createSubject(subject.toJson());
+      await ApiService.instance.createSubject(subject.toJson());
       await loadSubjects();
       return true;
     } catch (e) {
@@ -274,7 +263,7 @@ class AppController extends ChangeNotifier {
   Future<bool> updateSubject(Subject subject) async {
     try {
       if (subject.subjectId != null) {
-        await ApiService.updateSubject(subject.subjectId!, subject.toJson());
+        await ApiService.instance.updateSubject(subject.subjectId!, subject.toJson());
         await loadSubjects();
         return true;
       }
@@ -287,7 +276,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteSubject(int subjectId) async {
     try {
-      await ApiService.deleteSubject(subjectId);
+      await ApiService.instance.deleteSubject(subjectId);
       await loadSubjects();
       return true;
     } catch (e) {
@@ -298,7 +287,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadClasses() async {
     try {
-      final data = await ApiService.getClasses();
+      final data = await ApiService.instance.getClasses();
       _classes = data.map((json) => SchoolClass.fromJson(json)).toList();
       notifyListeners();
     } catch (e) {
@@ -309,7 +298,7 @@ class AppController extends ChangeNotifier {
   // Class CRUD
   Future<bool> createClass(SchoolClass clazz) async {
     try {
-      await ApiService.createClass(clazz.toJson());
+      await ApiService.instance.createClass(clazz.toJson());
       await loadClasses();
       return true;
     } catch (e) {
@@ -321,7 +310,7 @@ class AppController extends ChangeNotifier {
   Future<bool> updateClass(SchoolClass clazz) async {
     try {
       if (clazz.classId != null) {
-        await ApiService.updateClass(clazz.classId!, clazz.toJson());
+        await ApiService.instance.updateClass(clazz.classId!, clazz.toJson());
         await loadClasses();
         return true;
       }
@@ -334,7 +323,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteClass(int classId) async {
     try {
-      await ApiService.deleteClass(classId);
+      await ApiService.instance.deleteClass(classId);
       await loadClasses();
       return true;
     } catch (e) {
@@ -345,7 +334,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadStudents() async {
     try {
-      final data = await ApiService.getStudents();
+      final data = await ApiService.instance.getStudents();
       _students = data.map((json) => Student.fromJson(json)).toList();
       notifyListeners();
     } catch (e) {
@@ -355,8 +344,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> loadUsers() async {
     try {
-      final data = await ApiService.getUsers();
-      _users = data.map((json) => User.fromJson(json)).toList();
+      _users = await ApiService.instance.getUsers();
       notifyListeners();
     } catch (e) {
       print('Error loading users: $e');
@@ -366,7 +354,7 @@ class AppController extends ChangeNotifier {
   // Student CRUD
   Future<bool> createStudent(Student student) async {
     try {
-      await ApiService.createStudent(student.toJson());
+      await ApiService.instance.createStudent(student.toJson());
       await loadStudents();
       return true;
     } catch (e) {
@@ -377,7 +365,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> updateStudent(Student student) async {
     try {
-      await ApiService.updateStudent(student.studentId, student.toJson());
+      await ApiService.instance.updateStudent(student.studentId, student.toJson());
       await loadStudents();
       return true;
     } catch (e) {
@@ -388,7 +376,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteStudent(int studentId) async {
     try {
-      await ApiService.deleteStudent(studentId);
+      await ApiService.instance.deleteStudent(studentId);
       await loadStudents();
       return true;
     } catch (e) {
@@ -398,9 +386,10 @@ class AppController extends ChangeNotifier {
   }
 
   // User CRUD
-  Future<bool> createUser(User user) async {
+  // [SỬA 4] - Đổi tham số từ User -> UserModel
+  Future<bool> createUser(UserModel user) async {
     try {
-      await ApiService.createUser(user.toJson());
+      await ApiService.instance.createUser(user.toJson());
       await loadUsers();
       return true;
     } catch (e) {
@@ -409,10 +398,11 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateUser(User user) async {
+  // [SỬA 5] - Đổi tham số từ User -> UserModel
+  Future<bool> updateUser(UserModel user) async {
     try {
-      if (user.userId != null) {
-        await ApiService.updateUser(user.userId!, user.toJson());
+      if (user.id != null) {
+        await ApiService.instance.updateUser(user.id, user.toJson());
         await loadUsers();
         return true;
       }
@@ -425,7 +415,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteUser(int userId) async {
     try {
-      await ApiService.deleteUser(userId);
+      await ApiService.instance.deleteUser(userId);
       await loadUsers();
       return true;
     } catch (e) {
@@ -449,23 +439,22 @@ class AppController extends ChangeNotifier {
   bool isDuplicateCourseSection(CourseSection courseSection) {
     return courseSections.any((existing) {
       return existing.sectionId != courseSection.sectionId && // Different section
-             existing.classId == courseSection.classId &&
-             existing.subjectId == courseSection.subjectId &&
-             existing.teacherId == courseSection.teacherId &&
-             existing.semester == courseSection.semester &&
-             existing.shift == courseSection.shift;
+          existing.classId == courseSection.classId &&
+          existing.subjectId == courseSection.subjectId &&
+          existing.teacherId == courseSection.teacherId &&
+          existing.semester == courseSection.semester &&
+          existing.shift == courseSection.shift;
     });
   }
 
   // CRUD operations for Course Sections
   Future<bool> createCourseSection(CourseSection courseSection) async {
     try {
-      // Check for duplicates before creating
       if (isDuplicateCourseSection(courseSection)) {
         throw Exception('Học phần này đã tồn tại với cùng lớp, môn học, giảng viên, học kỳ và ca học');
       }
-      
-      await ApiService.createCourseSection(courseSection.toJson());
+
+      await ApiService.instance.createCourseSection(courseSection.toJson());
       await loadCourseSections();
       return true;
     } catch (e) {
@@ -477,7 +466,7 @@ class AppController extends ChangeNotifier {
   Future<bool> updateCourseSection(CourseSection courseSection) async {
     try {
       if (courseSection.sectionId != null) {
-        await ApiService.updateCourseSection(courseSection.sectionId!, courseSection.toJson());
+        await ApiService.instance.updateCourseSection(courseSection.sectionId!, courseSection.toJson());
         await loadCourseSections();
         return true;
       }
@@ -490,7 +479,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteCourseSection(int sectionId) async {
     try {
-      await ApiService.deleteCourseSection(sectionId);
+      await ApiService.instance.deleteCourseSection(sectionId);
       await loadCourseSections();
       return true;
     } catch (e) {
@@ -502,7 +491,7 @@ class AppController extends ChangeNotifier {
   // CRUD operations for Teaching Leaves
   Future<bool> updateTeachingLeave(TeachingLeave teachingLeave) async {
     try {
-      await ApiService.updateTeachingLeave(teachingLeave.sessionId, teachingLeave.toJson());
+      await ApiService.instance.updateTeachingLeave(teachingLeave.sessionId, teachingLeave.toJson());
       await loadTeachingLeaves();
       return true;
     } catch (e) {
@@ -513,7 +502,7 @@ class AppController extends ChangeNotifier {
 
   Future<bool> deleteTeachingLeave(int sessionId) async {
     try {
-      await ApiService.deleteTeachingLeave(sessionId);
+      await ApiService.instance.deleteTeachingLeave(sessionId);
       await loadTeachingLeaves();
       return true;
     } catch (e) {
