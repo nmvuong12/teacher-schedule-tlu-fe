@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/model/models.dart';
+import '../../data/model/models.dart' hide User; // Ẩn User (cũ)
+import '../../data/model/user_model.dart'; // Import UserModel (mới)
 import '../controller/app_controller.dart';
 
 class UserForm extends StatefulWidget {
-  final User? user;
-  final Function(User) onSubmit;
+  final UserModel? userModel;
+  final Function(UserModel) onSubmit;
 
   const UserForm({
     super.key,
-    this.user,
+    this.userModel,
     required this.onSubmit,
   });
 
@@ -23,18 +24,18 @@ class _UserFormState extends State<UserForm> {
   final _passwordController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
-  
+
   int _selectedRole = 1;
 
   @override
   void initState() {
     super.initState();
-    if (widget.user != null) {
-      _userNameController.text = widget.user!.userName;
+    if (widget.userModel != null) {
+      _userNameController.text = widget.userModel!.username;
       _passwordController.text = ''; // Don't show password
-      _fullNameController.text = widget.user!.fullName;
-      _emailController.text = widget.user!.email;
-      _selectedRole = widget.user!.role;
+      _fullNameController.text = widget.userModel!.fullName ?? '';
+      _emailController.text = widget.userModel!.email;
+      _selectedRole = widget.userModel!.role;
     }
   }
 
@@ -51,7 +52,7 @@ class _UserFormState extends State<UserForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.user == null ? 'Thêm người dùng mới' : 'Chỉnh sửa người dùng',
+                widget.userModel == null ? 'Thêm người dùng mới' : 'Chỉnh sửa người dùng',
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -59,7 +60,7 @@ class _UserFormState extends State<UserForm> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Username
               TextFormField(
                 controller: _userNameController,
@@ -75,24 +76,24 @@ class _UserFormState extends State<UserForm> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Password
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: widget.user == null ? 'Mật khẩu' : 'Mật khẩu mới (để trống nếu không đổi)',
+                  labelText: widget.userModel == null ? 'Mật khẩu' : 'Mật khẩu mới (để trống nếu không đổi)',
                   border: const OutlineInputBorder(),
                 ),
                 obscureText: true,
                 validator: (value) {
-                  if (widget.user == null && (value == null || value.isEmpty)) {
+                  if (widget.userModel == null && (value == null || value.isEmpty)) {
                     return 'Vui lòng nhập mật khẩu';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Full name
               TextFormField(
                 controller: _fullNameController,
@@ -108,7 +109,7 @@ class _UserFormState extends State<UserForm> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Email
               TextFormField(
                 controller: _emailController,
@@ -128,7 +129,7 @@ class _UserFormState extends State<UserForm> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Role
               DropdownButtonFormField<int>(
                 value: _selectedRole,
@@ -137,9 +138,9 @@ class _UserFormState extends State<UserForm> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 1, child: Text('Administrator')),
-                  DropdownMenuItem(value: 2, child: Text('Teacher')),
-                  // DropdownMenuItem(value: 3, child: Text('Student')),
+                  DropdownMenuItem(value: 0, child: Text('Admin')),
+                  DropdownMenuItem(value: 1, child: Text('Giảng viên')),
+                  DropdownMenuItem(value: 2, child: Text('Sinh viên')),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -148,7 +149,7 @@ class _UserFormState extends State<UserForm> {
                 },
               ),
               const SizedBox(height: 24),
-              
+
               // Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -161,15 +162,20 @@ class _UserFormState extends State<UserForm> {
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        final user = User(
-                          userId: widget.user?.userId,
-                          userName: _userNameController.text,
-                          password: _passwordController.text.isNotEmpty 
-                              ? _passwordController.text 
-                              : widget.user?.password ?? '',
+
+                        // [SỬA] - Tạo UserModel (mới) VÀ thêm password
+                        final user = UserModel(
+                          id: widget.userModel?.id ?? 0,
+                          username: _userNameController.text,
+                          // [SỬA] - Thêm logic password (giống code cũ)
+                          password: _passwordController.text.isNotEmpty
+                              ? _passwordController.text
+                              : null, // Gửi null nếu không đổi
                           fullName: _fullNameController.text,
                           email: _emailController.text,
                           role: _selectedRole,
+                          teacherId: widget.userModel?.teacherId,
+                          isActive: widget.userModel?.isActive ?? true,
                         );
                         widget.onSubmit(user);
                       }
@@ -178,7 +184,7 @@ class _UserFormState extends State<UserForm> {
                       backgroundColor: const Color(0xFF1E3A8A),
                       foregroundColor: Colors.white,
                     ),
-                    child: Text(widget.user == null ? 'Thêm' : 'Cập nhật'),
+                    child: Text(widget.userModel == null ? 'Thêm' : 'Cập nhật'),
                   ),
                 ],
               ),

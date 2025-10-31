@@ -14,6 +14,13 @@ class SessionManager {
     await prefs.setString(_keyUser, jsonEncode(user.toJson()));
   }
 
+  // ✅ HÀM MỚI (Từ file "cũ" của bạn)
+  // Hàm này sẽ được ApiService gọi để lấy token
+  static Future<String?> getToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyToken);
+  }
+
   static Future<(String?, UserModel?)> loadSession() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString(_keyToken);
@@ -35,6 +42,7 @@ class SessionManager {
     await prefs.remove(_keyUser);
   }
 
+  // ✅ HÀM LOGOUT (Từ file bạn tải lên)
   static Future<void> logout() async {
     await clearSession();
     // Có thể thêm logic khác như gọi API logout nếu cần

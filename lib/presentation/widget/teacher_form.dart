@@ -1,6 +1,10 @@
+// [teacher_form.dart] - ĐÃ SỬA LỖI
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/model/models.dart';
+// [SỬA] - Ẩn cả User (cũ) và Teacher (cũ)
+import '../../data/model/models.dart' hide User, Teacher;
+import '../../data/model/user_model.dart';
+import '../../data/model/teacher_model.dart'; // Import Teacher (mới)
 import '../controller/app_controller.dart';
 
 class TeacherForm extends StatefulWidget {
@@ -21,16 +25,18 @@ class _TeacherFormState extends State<TeacherForm> {
   final _formKey = GlobalKey<FormState>();
   final _departmentController = TextEditingController();
   final _totalTeachingHoursController = TextEditingController();
-  
+
   int? _selectedUserId;
   String _selectedUserName = '';
+  String _selectedFullName = ''; // Thêm để giữ tên đầy đủ
 
   @override
   void initState() {
     super.initState();
     if (widget.teacher != null) {
       _selectedUserId = widget.teacher!.userId;
-      _selectedUserName = widget.teacher!.userName;
+      _selectedUserName = widget.teacher!.username;
+      _selectedFullName = widget.teacher!.fullName ?? '';
       _departmentController.text = widget.teacher!.department;
       _totalTeachingHoursController.text = widget.teacher!.totalTeachingHours.toString();
     }
@@ -59,30 +65,33 @@ class _TeacherFormState extends State<TeacherForm> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
-                  // User selection
-                  Autocomplete<User>(
-                    displayStringForOption: (user) => '${user.userName} (${user.fullName})',
+
+                  Autocomplete<UserModel>(
+                    displayStringForOption: (user) => '${user.username} (${user.fullName ?? ''})',
                     optionsBuilder: (TextEditingValue textEditingValue) {
                       if (textEditingValue.text == '') {
-                        return controller.users.where((u) => u.role == 2); // Only teachers
+                        return controller.users.where((u) => u.role == 1);
                       }
                       final query = textEditingValue.text.toLowerCase();
-                      return controller.users.where((u) => 
-                        u.role == 2 && (u.userName.toLowerCase().contains(query) || 
-                                       u.fullName.toLowerCase().contains(query)));
+                      return controller.users.where((u) =>
+                      u.role == 1 && (u.username.toLowerCase().contains(query) ||
+                          (u.fullName ?? '').toLowerCase().contains(query)));
                     },
-                    onSelected: (User selection) {
-                      _selectedUserId = selection.userId;
-                      _selectedUserName = selection.userName;
+                    onSelected: (UserModel selection) {
+                      _selectedUserId = selection.id;
+                      _selectedUserName = selection.username;
+                      _selectedFullName = selection.fullName ?? '';
                     },
                     fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
-                      textController.text = _selectedUserName;
+                      textController.text = _selectedUserId == null
+                          ? ''
+                          : '$_selectedUserName (${_selectedFullName.isNotEmpty ? _selectedFullName : 'N/A'})';
+
                       return TextFormField(
                         controller: textController,
                         focusNode: focusNode,
                         decoration: const InputDecoration(
-                          labelText: 'Chọn người dùng',
+                          labelText: 'Chọn người dùng (giảng viên)',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
@@ -105,11 +114,11 @@ class _TeacherFormState extends State<TeacherForm> {
                               shrinkWrap: true,
                               children: options
                                   .map((user) => ListTile(
-                                        title: Text(user.userName),
-                                        subtitle: Text(user.fullName),
-                                        onTap: () => onSelected(user),
-                                        dense: true,
-                                      ))
+                                title: Text(user.username),
+                                subtitle: Text(user.fullName ?? 'N/A'),
+                                onTap: () => onSelected(user),
+                                dense: true,
+                              ))
                                   .toList(),
                             ),
                           ),
@@ -118,7 +127,7 @@ class _TeacherFormState extends State<TeacherForm> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Department
                   TextFormField(
                     controller: _departmentController,
@@ -134,7 +143,7 @@ class _TeacherFormState extends State<TeacherForm> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Total teaching hours
                   TextFormField(
                     controller: _totalTeachingHoursController,
@@ -155,7 +164,7 @@ class _TeacherFormState extends State<TeacherForm> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -171,7 +180,8 @@ class _TeacherFormState extends State<TeacherForm> {
                             final teacher = Teacher(
                               teacherId: widget.teacher?.teacherId,
                               userId: _selectedUserId!,
-                              userName: _selectedUserName,
+                              username: _selectedUserName,
+                              fullName: _selectedFullName,
                               department: _departmentController.text,
                               totalTeachingHours: int.parse(_totalTeachingHoursController.text),
                             );
