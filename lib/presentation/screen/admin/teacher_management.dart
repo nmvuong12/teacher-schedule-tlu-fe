@@ -1,11 +1,12 @@
-// [session_management.dart] - ĐÃ SỬA LỖI
+// [teacher_management.dart] - ĐÃ SỬA LỖI HOÀN CHỈNH
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:data_table_2/data_table_2.dart';
 import '../../controller/app_controller.dart';
-import '../../../data/model/session_model.dart';
-import '../../widget/session_form.dart';
+import '../../../data/model/teacher.dart';
+import '../../../data/model/user_model.dart'; // Import UserModel để dùng cho dropdown
 
 class TeacherManagement extends StatefulWidget {
   const TeacherManagement({super.key});
@@ -18,8 +19,12 @@ class _TeacherManagementState extends State<TeacherManagement> {
   final TextEditingController _searchController = TextEditingController();
   int _rowsPerPage = 10;
   int _currentPage = 0;
-  String _selectedFilter = 'all'; // 'all', 'today', 'upcoming', 'past', 'specific'
-  DateTime? _selectedDate; // ✅ Ngày cụ thể để lọc
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +40,7 @@ class _TeacherManagementState extends State<TeacherManagement> {
               Row(
                 children: [
                   const Text(
-                    'Quản lý buổi học',
+                    'Quản lý giảng viên', // <-- Sửa tiêu đề
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -43,101 +48,24 @@ class _TeacherManagementState extends State<TeacherManagement> {
                     ),
                   ),
                   const Spacer(),
-                  // Quick filter buttons
-                  Row(
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _selectedFilter = 'today';
-                            _currentPage = 0;
-                          });
-                        },
-                        icon: const FaIcon(FontAwesomeIcons.calendarDay, size: 14),
-                        label: const Text('Hôm nay'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _selectedFilter == 'today' ? Colors.white : const Color(0xFF1E3A8A),
-                          backgroundColor: _selectedFilter == 'today' ? const Color(0xFF1E3A8A) : Colors.transparent,
-                          side: const BorderSide(color: Color(0xFF1E3A8A)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddTeacherDialog(context, controller.users),
+                    icon: const FaIcon(FontAwesomeIcons.plus, size: 16),
+                    label: const Text('Thêm giảng viên'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E3A8A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _selectedFilter = 'upcoming';
-                            _currentPage = 0;
-                          });
-                        },
-                        icon: const FaIcon(FontAwesomeIcons.calendarPlus, size: 14),
-                        label: const Text('Sắp tới'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _selectedFilter == 'upcoming' ? Colors.white : const Color(0xFF1E3A8A),
-                          backgroundColor: _selectedFilter == 'upcoming' ? const Color(0xFF1E3A8A) : Colors.transparent,
-                          side: const BorderSide(color: Color(0xFF1E3A8A)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // ✅ Nút chọn ngày cụ thể
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _selectedDate ?? DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2030),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _selectedDate = date;
-                              _selectedFilter = 'specific';
-                              _currentPage = 0;
-                            });
-                          }
-                        },
-                        icon: const FaIcon(FontAwesomeIcons.calendar, size: 14),
-                        label: Text(_selectedFilter == 'specific' && _selectedDate != null
-                            ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
-                            : 'Chọn ngày'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _selectedFilter == 'specific' ? Colors.white : const Color(0xFF1E3A8A),
-                          backgroundColor: _selectedFilter == 'specific' ? const Color(0xFF1E3A8A) : Colors.transparent,
-                          side: const BorderSide(color: Color(0xFF1E3A8A)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton.icon(
-                        onPressed: () => _showAddSessionDialog(context),
-                        icon: const FaIcon(FontAwesomeIcons.plus, size: 16),
-                        label: const Text('Thêm buổi học'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E3A8A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
 
-              // Search and Filter
+              // Search
               Row(
                 children: [
                   Expanded(
@@ -145,7 +73,7 @@ class _TeacherManagementState extends State<TeacherManagement> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Tìm kiếm theo tên học phần, nội dung, phòng học...',
+                        hintText: 'Tìm kiếm theo tên giảng viên, khoa...',
                         prefixIcon: const FaIcon(FontAwesomeIcons.magnifyingGlass, size: 16),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -166,72 +94,11 @@ class _TeacherManagementState extends State<TeacherManagement> {
                       },
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedFilter,
-                      decoration: InputDecoration(
-                        labelText: 'Lọc theo',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'all', child: Text('Tất cả')),
-                        DropdownMenuItem(value: 'today', child: Text('Hôm nay')),
-                        DropdownMenuItem(value: 'upcoming', child: Text('Sắp tới')),
-                        DropdownMenuItem(value: 'past', child: Text('Đã qua')),
-                        DropdownMenuItem(value: 'specific', child: Text('Ngày cụ thể')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedFilter = value!;
-                          _currentPage = 0; // Reset to first page when filter changes
-                        });
-                      },
-                    ),
-                  ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-              // Filter info
-              if (_selectedFilter != 'all')
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E3A8A).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF1E3A8A).withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const FaIcon(FontAwesomeIcons.filter, size: 14, color: Color(0xFF1E3A8A)),
-                      const SizedBox(width: 8),
-                      Text(
-                        _getFilterDescription(),
-                        style: const TextStyle(
-                          color: Color(0xFF1E3A8A),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedFilter = 'all';
-                            _currentPage = 0;
-                          });
-                        },
-                        child: const Text('Xóa bộ lọc', style: TextStyle(color: Color(0xFF1E3A8A))),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 16),
-
-              // Sessions table
+              // Teachers table
               Expanded(
                 child: Card(
                   elevation: 4,
@@ -243,55 +110,29 @@ class _TeacherManagementState extends State<TeacherManagement> {
                     child: controller.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : Builder(builder: (context) {
-                      final now = DateTime.now();
-                      final today = DateTime(now.year, now.month, now.day);
-
-                      final all = controller.sessions.where((session) {
-                        // Text search filter
+                      // Lấy dữ liệu giảng viên
+                      final all = controller.teachers.where((teacher) {
                         if (_searchController.text.isNotEmpty) {
                           final query = _searchController.text.toLowerCase();
-                          // [SỬA 2] - Đổi 'sectionName' -> 'className'
-                          final sectionName = session.className ?? session.subjectName ?? '';
-                          if (!(session.content ?? '').toLowerCase().contains(query) &&
-                              !session.classroom.toLowerCase().contains(query) &&
-                              !(session.label ?? '').toLowerCase().contains(query) &&
-                              !sectionName.toLowerCase().contains(query)) {
-                            return false;
-                          }
+                          return teacher.userName.toLowerCase().contains(query) ||
+                              teacher.department.toLowerCase().contains(query);
                         }
-
-                        // Date filter
-                        final sessionDate = DateTime(session.date.year, session.date.month, session.date.day);
-                        switch (_selectedFilter) {
-                          case 'today':
-                            return sessionDate.isAtSameMomentAs(today);
-                          case 'upcoming':
-                            return sessionDate.isAfter(today);
-                          case 'past':
-                            return sessionDate.isBefore(today);
-                          case 'specific':
-                          // ✅ Lọc theo ngày cụ thể
-                            if (_selectedDate != null) {
-                              final specificDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
-                              return sessionDate.isAtSameMomentAs(specificDate);
-                            }
-                            return true;
-                          case 'all':
-                          default:
-                            return true;
-                        }
+                        return true;
                       }).toList();
+
                       final total = all.length;
                       final pageCount = (total / _rowsPerPage).ceil();
-                      if (_currentPage >= pageCount) {
+                      if (_currentPage >= pageCount && pageCount > 0) {
+                        _currentPage = pageCount - 1;
+                      } else if (pageCount == 0) {
                         _currentPage = 0;
                       }
+
                       int startIndex = _currentPage * _rowsPerPage;
                       if (startIndex < 0) startIndex = 0;
-                      if (startIndex > total) startIndex = total;
                       final rawEnd = startIndex + _rowsPerPage;
                       final endIndex = rawEnd > total ? total : rawEnd;
-                      final pageItems = all.sublist(startIndex, endIndex);
+                      final pageItems = (total > 0) ? all.sublist(startIndex, endIndex) : [];
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -300,35 +141,24 @@ class _TeacherManagementState extends State<TeacherManagement> {
                             child: DataTable2(
                               columnSpacing: 12,
                               horizontalMargin: 12,
-                              minWidth: 1200,
+                              minWidth: 800,
                               columns: const [
                                 DataColumn2(
                                   label: Text('STT'),
                                   size: ColumnSize.S,
                                 ),
                                 DataColumn2(
-                                  label: Text('Học phần'),
+                                  label: Text('Tên giảng viên'),
                                   size: ColumnSize.L,
                                 ),
                                 DataColumn2(
-                                  label: Text('Ngày'),
+                                  label: Text('Khoa'),
                                   size: ColumnSize.M,
                                 ),
                                 DataColumn2(
-                                  label: Text('Phòng học'),
+                                  label: Text('Tổng giờ dạy'),
                                   size: ColumnSize.S,
-                                ),
-                                DataColumn2(
-                                  label: Text('Nội dung'),
-                                  size: ColumnSize.L,
-                                ),
-                                DataColumn2(
-                                  label: Text('Thời gian'),
-                                  size: ColumnSize.M,
-                                ),
-                                DataColumn2(
-                                  label: Text('Trạng thái'),
-                                  size: ColumnSize.M,
+                                  numeric: true,
                                 ),
                                 DataColumn2(
                                   label: Text('Thao tác'),
@@ -337,48 +167,36 @@ class _TeacherManagementState extends State<TeacherManagement> {
                               ],
                               rows: pageItems.asMap().entries.map((entry) {
                                 final index = entry.key;
-                                final session = entry.value;
-                                // [SỬA 2] - Đổi 'sectionName' -> 'className'
-                                final sectionName = session.className ?? session.subjectName ?? 'N/A';
+                                final teacher = entry.value;
                                 final stt = startIndex + index + 1;
-
-                                // Format date as dd/MM/yyyy
-                                final dateStr = '${session.date.day.toString().padLeft(2, '0')}/${session.date.month.toString().padLeft(2, '0')}/${session.date.year}';
 
                                 return DataRow2(
                                   cells: [
                                     DataCell(Text(stt.toString())),
                                     DataCell(
                                       Text(
-                                        sectionName,
+                                        teacher.userName,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: Color(0xFF1E3A8A),
                                         ),
                                       ),
                                     ),
-                                    DataCell(Text(dateStr)),
-                                    DataCell(Text(session.classroom)),
-                                    DataCell(Text(session.content ?? 'N/A')),
-                                    DataCell(Text(session.timeRange)),
-                                    // [SỬA 3] - Gọi hàm _buildStatusChip với 'session'
-                                    DataCell(_buildStatusChip(session)),
+                                    DataCell(Text(teacher.department)),
+                                    DataCell(Text(teacher.totalTeachingHours.toString())),
                                     DataCell(
-                                      SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: const FaIcon(FontAwesomeIcons.pen, size: 14),
-                                              onPressed: () => _showEditSessionDialog(context, session),
-                                            ),
-                                            IconButton(
-                                              icon: const FaIcon(FontAwesomeIcons.trash, size: 14, color: Colors.red),
-                                              onPressed: () => _showDeleteConfirmDialog(context, session),
-                                            ),
-                                          ],
-                                        ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const FaIcon(FontAwesomeIcons.pen, size: 14),
+                                            onPressed: () => _showEditTeacherDialog(context, teacher, controller.users),
+                                          ),
+                                          IconButton(
+                                            icon: const FaIcon(FontAwesomeIcons.trash, size: 14, color: Colors.red),
+                                            onPressed: () => _showDeleteConfirmDialog(context, teacher),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
@@ -400,31 +218,6 @@ class _TeacherManagementState extends State<TeacherManagement> {
       },
     );
   }
-
-  // [SỬA 3] - Thay thế toàn bộ hàm _buildStatusChip
-  Widget _buildStatusChip(Session session) {
-    // Lấy thông tin trạng thái từ model
-    final statusInfo = session.getStatusInfo();
-    final Color color = statusInfo['color'];
-    final String text = statusInfo['text'];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
-    );
-  }
-
 
   Widget _buildPaginationBar(int total) {
     final totalPages = (total / _rowsPerPage).ceil();
@@ -484,62 +277,156 @@ class _TeacherManagementState extends State<TeacherManagement> {
     );
   }
 
-  void _showAddSessionDialog(BuildContext context) {
+  void _showAddTeacherDialog(BuildContext context, List<UserModel> allUsers) {
+    // Lọc ra những user đã là giảng viên
+    final teacherUserIds = context.read<AppController>().teachers.map((t) => t.userId).toSet();
+    // Chỉ hiển thị user có vai trò 'Giảng viên' (role=1) và chưa có hồ sơ giảng viên
+    final availableUsers = allUsers.where((u) => u.isTeacher && !teacherUserIds.contains(u.id)).toList();
+
+    _showTeacherFormDialog(
+      context: context,
+      title: 'Thêm giảng viên',
+      availableUsers: availableUsers,
+      onSubmit: (teacher) async {
+        bool ok = false;
+        String errorMessage = 'Thêm giảng viên thất bại';
+        try {
+          ok = await context.read<AppController>().createTeacher(teacher);
+        } catch (e) {
+          errorMessage = e.toString().replaceFirst('Exception: ', '');
+        }
+        return {'ok': ok, 'message': ok ? 'Thêm giảng viên thành công' : errorMessage};
+      },
+    );
+  }
+
+  void _showEditTeacherDialog(BuildContext context, Teacher teacher, List<UserModel> allUsers) {
+    // Khi sửa, user được chọn phải là chính user đó
+    final currentUser = allUsers.firstWhere((u) => u.id == teacher.userId, orElse: () =>
+        UserModel(id: teacher.userId, username: teacher.userName, email: '', role: 1) // Tạo user giả nếu không tìm thấy
+    );
+
+    _showTeacherFormDialog(
+      context: context,
+      title: 'Cập nhật giảng viên',
+      teacher: teacher,
+      availableUsers: [currentUser], // Chỉ cho phép xem, không cho đổi
+      isEdit: true,
+      onSubmit: (updatedTeacher) async {
+        bool ok = false;
+        String errorMessage = 'Cập nhật giảng viên thất bại';
+        try {
+          ok = await context.read<AppController>().updateTeacher(updatedTeacher);
+        } catch (e) {
+          errorMessage = e.toString().replaceFirst('Exception: ', '');
+        }
+        return {'ok': ok, 'message': ok ? 'Cập nhật giảng viên thành công' : errorMessage};
+      },
+    );
+  }
+
+  void _showTeacherFormDialog({
+    required BuildContext context,
+    required String title,
+    Teacher? teacher,
+    bool isEdit = false,
+    required List<UserModel> availableUsers,
+    required Future<Map<String, dynamic>> Function(Teacher) onSubmit,
+  }) {
     final outerContext = context;
+    final formKey = GlobalKey<FormState>();
+    UserModel? selectedUser = isEdit ? availableUsers.first : null;
+    final departmentController = TextEditingController(text: teacher?.department ?? '');
+    final hoursController = TextEditingController(text: teacher?.totalTeachingHours.toString() ?? '0');
+
     showDialog(
       context: outerContext,
-      builder: (dialogCtx) => SessionForm(
-        onSubmit: (session) async {
-          bool ok = false;
-          String errorMessage = 'Thêm buổi học thất bại';
-          try {
-            ok = await outerContext.read<AppController>().createSession(session);
-          } catch (e) {
-            errorMessage = e.toString().replaceFirst('Exception: ', '');
+      builder: (dialogCtx) => StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(title),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButtonFormField<UserModel>(
+                        value: selectedUser,
+                        hint: const Text('Chọn tài khoản người dùng'),
+                        // Vô hiệu hóa dropdown nếu đang sửa
+                        onChanged: isEdit ? null : (UserModel? user) {
+                          setState(() {
+                            selectedUser = user;
+                          });
+                        },
+                        items: availableUsers.map((UserModel user) {
+                          return DropdownMenuItem<UserModel>(
+                            value: user,
+                            child: Text(user.fullName ?? user.username),
+                          );
+                        }).toList(),
+                        validator: (value) => value == null ? 'Vui lòng chọn tài khoản' : null,
+                        decoration: const InputDecoration(labelText: 'Tài khoản Giảng viên'),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: departmentController,
+                        decoration: const InputDecoration(labelText: 'Khoa'),
+                        validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập khoa' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: hoursController,
+                        decoration: const InputDecoration(labelText: 'Tổng giờ dạy (mặc định)'),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập tổng giờ' : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      final newTeacher = Teacher(
+                        teacherId: teacher?.teacherId, // Giữ ID cũ nếu sửa
+                        userId: selectedUser!.id,
+                        userName: selectedUser!.fullName ?? selectedUser!.username,
+                        department: departmentController.text,
+                        totalTeachingHours: int.tryParse(hoursController.text) ?? 0,
+                      );
+
+                      final result = await onSubmit(newTeacher);
+
+                      if (Navigator.of(dialogCtx).canPop()) {
+                        Navigator.of(dialogCtx).pop();
+                      }
+                      _showSnack(outerContext, result['message'], result['ok']);
+                    }
+                  },
+                  child: const Text('Lưu'),
+                ),
+              ],
+            );
           }
-          if (ok) {
-            Navigator.of(dialogCtx).pop();
-            _showSnack(outerContext, 'Thêm buổi học thành công', true);
-          } else {
-            _showSnack(outerContext, errorMessage, false);
-          }
-        },
       ),
     );
   }
 
-  void _showEditSessionDialog(BuildContext context, Session session) {
-    final outerContext = context;
-    showDialog(
-      context: outerContext,
-      builder: (dialogCtx) => SessionForm(
-        session: session,
-        onSubmit: (updatedSession) async {
-          bool ok = false;
-          String errorMessage = 'Cập nhật buổi học thất bại';
-          try {
-            ok = await outerContext.read<AppController>().updateSession(updatedSession);
-          } catch (e) {
-            errorMessage = e.toString().replaceFirst('Exception: ', '');
-          }
-          if (ok) {
-            Navigator.of(dialogCtx).pop();
-            _showSnack(outerContext, 'Cập nhật buổi học thành công', true);
-          } else {
-            _showSnack(outerContext, errorMessage, false);
-          }
-        },
-      ),
-    );
-  }
-
-  void _showDeleteConfirmDialog(BuildContext context, Session session) {
+  void _showDeleteConfirmDialog(BuildContext context, Teacher teacher) {
     final outerContext = context;
     showDialog(
       context: outerContext,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa buổi học "${session.label}"?'),
+        content: Text('Bạn có chắc chắn muốn xóa giảng viên "${teacher.userName}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
@@ -548,10 +435,10 @@ class _TeacherManagementState extends State<TeacherManagement> {
           ElevatedButton(
             onPressed: () async {
               bool ok = false;
-              String errorMessage = 'Xóa buổi học thất bại';
+              String errorMessage = 'Xóa giảng viên thất bại';
               try {
-                if (session.sessionId != null) {
-                  ok = await outerContext.read<AppController>().deleteSession(session.sessionId!);
+                if (teacher.teacherId != null) {
+                  ok = await outerContext.read<AppController>().deleteTeacher(teacher.teacherId!);
                 }
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -559,7 +446,7 @@ class _TeacherManagementState extends State<TeacherManagement> {
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }
-              _showSnack(outerContext, ok ? 'Xóa buổi học thành công' : errorMessage, ok);
+              _showSnack(outerContext, ok ? 'Xóa giảng viên thành công' : errorMessage, ok);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Xóa', style: TextStyle(color: Colors.white)),
@@ -581,29 +468,5 @@ class _TeacherManagementState extends State<TeacherManagement> {
         ),
       );
     });
-  }
-
-  String _getFilterDescription() {
-    switch (_selectedFilter) {
-      case 'today':
-        return 'Hiển thị buổi học hôm nay';
-      case 'upcoming':
-        return 'Hiển thị buổi học sắp tới';
-      case 'past':
-        return 'Hiển thị buổi học đã qua';
-      case 'specific':
-        if (_selectedDate != null) {
-          return 'Hiển thị buổi học ngày ${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';
-        }
-        return 'Chưa chọn ngày cụ thể';
-      default:
-        return '';
-    }
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }

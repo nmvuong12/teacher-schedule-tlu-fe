@@ -1,4 +1,4 @@
-// lib/data/model/session_model.dart
+// [session_model.dart] - ĐÃ SỬA LỖI HÀM _parseTime
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
@@ -66,31 +66,53 @@ class Session {
       return 0;
     }
 
-    // Helper parse time-only string sang DateTime
+    // ⭐️ [SỬA LỖI] ⭐️
+    // Hàm _parseTime mới, an toàn hơn để xử lý các định dạng HH:mm
     DateTime _parseTime(dynamic timeStr) {
       if (timeStr is! String) {
         return DateTime.parse('1970-01-01T00:00:00');
       }
-      return DateTime.parse('1970-01-01T${timeStr.padLeft(8, '0')}');
+
+      try {
+        // Thử parse trực tiếp nếu là định dạng chuẩn (HH:mm:ss)
+        if (timeStr.length == 8) {
+          return DateTime.parse('1970-01-01T$timeStr');
+        }
+
+        // Xử lý các định dạng rút gọn như HH:mm (14:30) hoặc H:m (9:5)
+        final parts = timeStr.split(':');
+        final hour = int.tryParse(parts[0]) ?? 0;
+        final minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
+        final second = int.tryParse(parts.length > 2 ? parts[2] : '0') ?? 0;
+
+        // Tạo lại chuỗi an toàn
+        final safeTimeStr = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:${second.toString().padLeft(2, '0')}';
+
+        return DateTime.parse('1970-01-01T$safeTimeStr');
+
+      } catch (e) {
+        debugPrint('Lỗi _parseTime với giá trị "$timeStr": $e');
+        return DateTime.parse('1970-01-01T00:00:00');
+      }
     }
 
     return Session(
       sessionId: json['sessionId'], // Giữ là int?
       sectionId: _parseInt(json["sectionId"]),
+      // LocalDate của Java khi parse ("YYYY-MM-DD") là hợp lệ
       date: DateTime.parse(json["date"] ?? DateTime.now().toIso8601String()),
       classroom: json["classroom"] ?? 'N/A',
       status: json["status"] ?? 'unknown',
       content: json["content"],
       label: json["label"],
 
-      // Dùng logic parse time từ session.dart
+      // Dùng hàm _parseTime đã sửa lỗi
       startTime: _parseTime(json['startTime']),
       endTime: _parseTime(json['endTime']),
 
-      // Các trường đã gộp
+      // Các trường đã gộp (Tên đã khớp với SessionDTO.java)
       subjectName: json["subjectName"],
       className: json["className"] ?? json["sectionName"], // Lấy 1 trong 2
-
       studentCount: json["studentCount"] == null ? null : _parseInt(json["studentCount"]),
       isAttendanceCompleted: json["isAttendanceCompleted"],
       isContentCompleted: json["isContentCompleted"],
@@ -113,7 +135,7 @@ class Session {
 
       // Các trường đã gộp
       "subjectName": subjectName,
-      "className": className,
+      "className": className ?? sectionName, // Đảm bảo dùng tên gốc nếu className null
       "studentCount": studentCount,
       "isAttendanceCompleted": isAttendanceCompleted,
       "isContentCompleted": isContentCompleted,
@@ -127,6 +149,9 @@ class Session {
 
     return json;
   }
+
+  // Getter phụ để tương thích với logic cũ (nếu cần)
+  String? get sectionName => className;
 
   // Getter 'timeRange' từ session.dart (giờ đã hoạt động)
   String get timeRange {
@@ -149,7 +174,7 @@ class Session {
       case 'Từ chối xin nghỉ - Đã lên lịch':
         return {'text': 'Từ chối xin nghỉ - Đã lên lịch', 'color': Colors.red, 'enum': SessionStatus.rejectedPending};
       default:
-        return {'text': 'Không xác định', 'color': Colors.black, 'enum': SessionStatus.unknown};
+        return {'text': 'Không xác định ($status)', 'color': Colors.black, 'enum': SessionStatus.unknown};
     }
   }
 }
