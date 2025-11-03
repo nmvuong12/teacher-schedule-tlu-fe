@@ -248,10 +248,10 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
       case AppRouter.courses:
         newIndex = 1;
         break;
-      case AppRouter.leaveRequests:
+      case AppRouter.sessions:
         newIndex = 2;
         break;
-      case AppRouter.statistics:
+      case AppRouter.leaveRequests:
         newIndex = 3;
         break;
       case AppRouter.users:
@@ -260,16 +260,16 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
       case AppRouter.classes:
         newIndex = 5;
         break;
-      case AppRouter.subjects:
+      case AppRouter.students:
         newIndex = 6;
         break;
       case AppRouter.teachers:
         newIndex = 7;
         break;
-      case AppRouter.students:
+      case AppRouter.subjects:
         newIndex = 8;
         break;
-      case AppRouter.sessions:
+      case AppRouter.statistics:
         newIndex = 9;
         break;
     }
@@ -330,16 +330,16 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
         route: AppRouter.courses,
       ),
       NavigationItem(
-        icon: Icons.assignment,
-        title: 'Quản lý đơn xin nghỉ',
+        icon: Icons.event,
+        title: 'Quản lý buổi học',
         index: 2,
-        route: AppRouter.leaveRequests,
+        route: AppRouter.sessions,
       ),
       NavigationItem(
-        icon: Icons.bar_chart,
-        title: 'Thống kê',
+        icon: Icons.assignment,
+        title: 'Quản lý đơn xin nghỉ',
         index: 3,
-        route: AppRouter.statistics,
+        route: AppRouter.leaveRequests,
       ),
       NavigationItem(
         icon: Icons.people,
@@ -354,10 +354,10 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
         route: AppRouter.classes,
       ),
       NavigationItem(
-        icon: Icons.subject,
-        title: 'Quản lý môn học',
+        icon: Icons.person_outline,
+        title: 'Quản lý sinh viên',
         index: 6,
-        route: AppRouter.subjects,
+        route: AppRouter.students,
       ),
       NavigationItem(
         icon: Icons.person,
@@ -366,16 +366,16 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
         route: AppRouter.teachers,
       ),
       NavigationItem(
-        icon: Icons.person_outline,
-        title: 'Quản lý sinh viên',
+        icon: Icons.subject,
+        title: 'Quản lý môn học',
         index: 8,
-        route: AppRouter.students,
+        route: AppRouter.subjects,
       ),
       NavigationItem(
-        icon: Icons.event,
-        title: 'Quản lý buổi học',
+        icon: Icons.bar_chart,
+        title: 'Thống kê',
         index: 9,
-        route: AppRouter.sessions,
+        route: AppRouter.statistics,
       ),
     ];
   }
@@ -389,10 +389,10 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
         context.go(AppRouter.courses);
         break;
       case 2:
-        context.go(AppRouter.leaveRequests);
+        context.go(AppRouter.sessions);
         break;
       case 3:
-        context.go(AppRouter.statistics);
+        context.go(AppRouter.leaveRequests);
         break;
       case 4:
         context.go(AppRouter.users);
@@ -401,16 +401,16 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
         context.go(AppRouter.classes);
         break;
       case 6:
-        context.go(AppRouter.subjects);
+        context.go(AppRouter.students);
         break;
       case 7:
         context.go(AppRouter.teachers);
         break;
       case 8:
-        context.go(AppRouter.students);
+        context.go(AppRouter.subjects);
         break;
       case 9:
-        context.go(AppRouter.sessions);
+        context.go(AppRouter.statistics);
         break;
     }
   }
