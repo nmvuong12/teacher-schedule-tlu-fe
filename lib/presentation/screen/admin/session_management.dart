@@ -19,6 +19,7 @@ class _SessionManagementState extends State<SessionManagement> {
   int _currentPage = 0;
   String _selectedFilter = 'all'; // 'all', 'today', 'upcoming', 'past', 'specific'
   DateTime? _selectedDate; // ✅ Ngày cụ thể để lọc
+  String _statusFilter = 'all'; // 'all', 'Đã hủy', 'Chưa bắt đầu', 'Đang diễn ra', 'Đã hoàn thành'
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +192,32 @@ class _SessionManagementState extends State<SessionManagement> {
                       },
                     ),
                   ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _statusFilter,
+                      decoration: InputDecoration(
+                        labelText: 'Trạng thái',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'all', child: Text('Tất cả trạng thái')),
+                        DropdownMenuItem(value: 'Chưa bắt đầu', child: Text('Chưa bắt đầu')),
+                        DropdownMenuItem(value: 'Đang diễn ra', child: Text('Đang diễn ra')),
+                        DropdownMenuItem(value: 'Đã hoàn thành', child: Text('Đã hoàn thành')),
+                        DropdownMenuItem(value: 'Đã hủy', child: Text('Đã hủy')),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _statusFilter = value!;
+                          _currentPage = 0;
+                        });
+                      },
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -278,6 +305,11 @@ class _SessionManagementState extends State<SessionManagement> {
                                 default:
                                   return true;
                               }
+                              // Status filter
+                              // Only reached if date-filter above returned true
+                            }).where((session) {
+                              if (_statusFilter == 'all') return true;
+                              return session.status == _statusFilter;
                             }).toList();
                             final total = all.length;
                             final pageCount = (total / _rowsPerPage).ceil();

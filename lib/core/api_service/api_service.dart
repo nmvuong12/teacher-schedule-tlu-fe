@@ -24,8 +24,8 @@ class ApiService {
   // [SỬA 2] - Constructor riêng tư
   ApiService._() {
     _dio.options.baseUrl = _baseUrl;
-    _dio.options.connectTimeout = const Duration(seconds: 8);
-    _dio.options.receiveTimeout = const Duration(seconds: 30);
+    _dio.options.connectTimeout = const Duration(seconds: 60);
+    _dio.options.receiveTimeout = const Duration(seconds: 60);
 
     if (kDebugMode) {
       _dio.interceptors.add(LogInterceptor(
@@ -387,7 +387,12 @@ class ApiService {
       return response.data;
     } on DioException catch (e) {
       debugPrint('Lỗi khi tạo học phần: $e');
-      throw Exception('Không thể tạo học phần: ${e.message}');
+      final msg = (e.response?.data is String)
+          ? e.response?.data
+          : (e.response?.data is Map && (e.response?.data['message'] != null))
+              ? e.response?.data['message']
+              : e.message;
+      throw Exception(msg ?? 'Không thể tạo học phần');
     }
   }
 
@@ -397,7 +402,12 @@ class ApiService {
       return response.data;
     } on DioException catch (e) {
       debugPrint('Lỗi khi cập nhật học phần: $e');
-      throw Exception('Không thể cập nhật học phần: ${e.message}');
+      final msg = (e.response?.data is String)
+          ? e.response?.data
+          : (e.response?.data is Map && (e.response?.data['message'] != null))
+              ? e.response?.data['message']
+              : e.message;
+      throw Exception(msg ?? 'Không thể cập nhật học phần');
     }
   }
 

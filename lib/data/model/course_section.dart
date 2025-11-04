@@ -36,37 +36,30 @@ class CourseSection {
 
   factory CourseSection.fromJson(Map<String, dynamic> json) {
     String _parseShift(dynamic value) {
-      if (value == null) return 'sáng';
+      // Normalize to numeric string '1'..'4' for FE controls
+      if (value == null) return '1';
       if (value is int) {
-        switch (value) {
-          case 1: return 'sáng';
-          case 2: return 'chiều';
-          case 3: return 'tối';
-          case 4: return 'tối';
-          default: return 'sáng';
-        }
+        return value.clamp(1,4).toString();
       }
       final s = value.toString().trim().toLowerCase();
+      if (RegExp(r'^[1-4]$').hasMatch(s)) return s;
       switch (s) {
         case 'sáng':
-        case 'ca 1':
-        case '1':
         case 'morning':
-          return 'sáng';
+        case 'ca 1':
+          return '1';
         case 'chiều':
-        case 'ca 2':
-        case '2':
         case 'afternoon':
-          return 'chiều';
+        case 'ca 2':
+          return '2';
         case 'tối':
-        case 'ca 3':
-        case 'ca 4':
-        case '3':
-        case '4':
         case 'evening':
-          return 'tối';
+        case 'ca 3':
+          return '3';
+        case 'ca 4':
+          return '4';
         default:
-          return 'sáng';
+          return '1';
       }
     }
 
@@ -100,13 +93,37 @@ class CourseSection {
   }
 
   Map<String, dynamic> toJson() {
+    String _normalizeShiftForApi(String value) {
+      final v = value.trim().toLowerCase();
+      // Already numeric 1-4
+      if (RegExp(r'^[1-4]$').hasMatch(v)) return v;
+      // Map legacy labels to numeric
+      switch (v) {
+        case 'sáng':
+        case 'morning':
+        case 'ca 1':
+          return '1';
+        case 'chiều':
+        case 'afternoon':
+        case 'ca 2':
+          return '2';
+        case 'tối':
+        case 'evening':
+        case 'ca 3':
+          return '3';
+        case 'ca 4':
+          return '4';
+        default:
+          return '1';
+      }
+    }
     final Map<String, dynamic> json = {
       'classId': classId,
       'className': className,
       'subjectId': subjectId,
       'subjectName': subjectName,
       'semester': semester,
-      'shift': shift,
+      'shift': _normalizeShiftForApi(shift),
       'startDate': startDate.toIso8601String().split('T')[0],
       'endDate': endDate.toIso8601String().split('T')[0],
       'weeklySessions': weeklySessions,
@@ -127,16 +144,37 @@ class CourseSection {
   }
 
   String get shiftName {
-    switch (shift.toLowerCase()) {
-      case 'sáng':
-        return 'Sáng';
-      case 'chiều':
-        return 'Chiều';
-      case 'tối':
-        return 'Tối';
+    switch (shift) {
+      case '1':
+        return 'Ca 1 (07:00 - 09:35)';
+      case '2':
+        return 'Ca 2 (09:40 - 12:25)';
+      case '3':
+        return 'Ca 3 (12:55 - 15:35)';
+      case '4':
+        return 'Ca 4 (15:40 - 18:20)';
       default:
-        return 'Không xác định';
+        return 'Ca ?';
     }
+  }
+
+  String get weeklySessionsLabel {
+    if (weeklySessions.trim().isEmpty) return '';
+    final parts = weeklySessions.split(',');
+    final labels = <String>[];
+    for (final p in parts) {
+      switch (p.trim()) {
+        case '2': labels.add('Hai'); break;
+        case '3': labels.add('Ba'); break;
+        case '4': labels.add('Tư'); break;
+        case '5': labels.add('Năm'); break;
+        case '6': labels.add('Sáu'); break;
+        case '7': labels.add('Bảy'); break;
+        case '8': labels.add('Chủ nhật'); break;
+        default: if (p.trim().isNotEmpty) labels.add(p.trim());
+      }
+    }
+    return labels.join(', ');
   }
 
   // ✅ Getter tính toán trạng thái dựa trên thời gian (fallback nếu API không trả về)
