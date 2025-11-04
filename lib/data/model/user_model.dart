@@ -68,7 +68,7 @@ class UserModel {
       'id': id,
       'teacherId': teacherId,
       'studentId': studentId, // Thêm studentId vào JSON
-      'username': username,
+      'userName': username, // ✅ Sửa: gửi userName thay vì username để khớp với backend
       'email': email,
       'role': role,
       'fullName': fullName,

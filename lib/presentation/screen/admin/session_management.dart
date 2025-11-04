@@ -205,10 +205,10 @@ class _SessionManagementState extends State<SessionManagement> {
                       ),
                       items: const [
                         DropdownMenuItem(value: 'all', child: Text('Tất cả trạng thái')),
-                        DropdownMenuItem(value: 'Chưa bắt đầu', child: Text('Chưa bắt đầu')),
-                        DropdownMenuItem(value: 'Đang diễn ra', child: Text('Đang diễn ra')),
+                        DropdownMenuItem(value: 'Đã lên lịch', child: Text('Đã lên lịch')),
+                        DropdownMenuItem(value: 'Đã nghỉ dạy', child: Text('Đã nghỉ dạy')),
+                        DropdownMenuItem(value: 'Từ chối xin nghỉ - Đã lên lịch', child: Text('Từ chối xin nghỉ - Đã lên lịch')),
                         DropdownMenuItem(value: 'Đã hoàn thành', child: Text('Đã hoàn thành')),
-                        DropdownMenuItem(value: 'Đã hủy', child: Text('Đã hủy')),
                       ],
                       onChanged: (value) {
                         setState(() {

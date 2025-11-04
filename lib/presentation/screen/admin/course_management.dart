@@ -180,7 +180,15 @@ class _CourseManagementState extends State<CourseManagement> {
                                       return DataRow2(
                                         cells: [
                                           DataCell(Text('IT${(section.sectionId ?? 0).toString().padLeft(4, '0')}')),
-                                          DataCell(Text(section.subjectName)),
+                                          DataCell(
+                                            Text(
+                                              section.sectionName ?? section.subjectName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF1E3A8A),
+                                              ),
+                                            ),
+                                          ),
                                           DataCell(Text(section.className)),
                                           DataCell(Text(section.weeklySessionsLabel)),
                                           DataCell(Text(section.teacherName)),
