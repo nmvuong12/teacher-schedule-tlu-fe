@@ -1,25 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // Thêm import cho go_router
-import '../../../data/model/user_model.dart';
-// import '../login.dart'; // Xóa import LoginScreen cũ
+import 'package:go_router/go_router.dart';
+import 'package:schedule_ui/presentation/screen/teacher/teacher_schedule_screen.dart';
 import '../../../core/api_service/session_manager.dart';
-import '/router/app_router.dart'; // Thêm import cho AppRouter
-import 'teacher_courses_screen.dart';
-import 'teacher_home_screen.dart';
+import '../../../data/model/user_model.dart';
+import '../../../router/app_router.dart';
 import 'teacher_profile_screen.dart';
+import 'teacher_home_screen.dart';
+import 'teacher_courses_screen.dart';
 
-// Chuyển thành StatefulWidget
 class TeacherMainScreen extends StatefulWidget {
-  final UserModel user;
-
-  const TeacherMainScreen({super.key, required this.user});
+  const TeacherMainScreen({super.key});
 
   @override
   State<TeacherMainScreen> createState() => _TeacherMainScreenState();
 }
 
-class _TeacherMainScreenState extends State<TeacherMainScreen> {
-  // Thêm hàm _handleLogout từ file hướng dẫn
+class _TeacherMainScreenState extends State<TeacherMainScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  UserModel? _user;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this, initialIndex: 1);
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final (_, userJson) = await SessionManager.loadSession();
+    if (userJson != null) {
+      print('🔍 TeacherMainScreen: Loading user from session');
+      print('📦 userJson: $userJson');
+      print('📦 teacherId in userJson: ${userJson['teacherId']}');
+      setState(() {
+        _user = UserModel.fromJson(userJson);
+        print('📦 UserModel loaded - teacherId: ${_user?.teacherId}');
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _handleLogout() async {
     // Show confirmation dialog
     final shouldLogout = await showDialog<bool>(
@@ -34,66 +60,84 @@ class _TeacherMainScreenState extends State<TeacherMainScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Đăng xuất'),
+            child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
     if (shouldLogout == true) {
-      await SessionManager.logout(); // Dùng hàm logout() mới
+      await SessionManager.logout();
       if (mounted) {
-        context.go(AppRouter.login); // Dùng go_router để điều hướng
+        context.go(AppRouter.login);
       }
     }
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_user == null) {
+      return Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xFF3B5998),
+          backgroundColor: const Color(0xFF3A5BA0),
           title: const Text(
-            "TLU Schedule",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+            'TLU Schedule',
+            style: TextStyle(color: Colors.white),
           ),
           centerTitle: true,
-          automaticallyImplyLeading: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white),
-              // Cập nhật onPressed để gọi hàm _handleLogout
-              onPressed: _handleLogout,
-            ),
-          ],
-          bottom: const TabBar(
-            labelColor: Colors.yellow,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.yellow,
-            indicatorWeight: 3,
-            tabs: [
-              Tab(text: "Hôm nay"),
-              Tab(text: "Lịch dạy"),
-              Tab(text: "Học phần"),
-              Tab(text: "Thông tin"),
-            ],
+        ),
+        body: const Center(child: Text('Không tìm thấy thông tin người dùng')),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF3A5BA0),
+        title: const Text(
+          'TLU Schedule',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: _handleLogout,
+            tooltip: 'Đăng xuất',
           ),
-        ),
-        body: TabBarView(
-          children: [
-            // Truy cập user qua `widget.user`
-            TeacherHomeScreen(user: widget.user),
-            const Center(child: Text("Màn hình Lịch dạy (chưa làm)")),
-            TeacherCoursesScreen(user: widget.user),
-            TeacherProfileScreen(user: widget.user),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: const Color(0xFFFFA726),
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: const [
+            Tab(text: 'Hôm nay'),
+            Tab(text: 'Lịch dạy'),
+            Tab(text: 'Học phần'),
+            Tab(text: 'Thông tin'),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          TeacherHomeScreen(key: const ValueKey('tab_today'), user: _user!),
+          const TeacherScheduleScreen(key: ValueKey('tab_schedule')),
+          TeacherCoursesScreen(key: const ValueKey('tab_subject'), user: _user!),
+          TeacherProfileScreen(key: const ValueKey('tab_profile')),
+        ],
       ),
     );
   }

@@ -11,36 +11,94 @@ import 'package:schedule_ui/core/api_service/session_manager.dart';
 import 'package:schedule_ui/router/app_router.dart';
 
 // 2. FUNCTION LOGOUT - Copy vào class dashboard của bạn
-Future<void> _handleLogout() async {
-  // Show confirmation dialog
-  final shouldLogout = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Xác nhận đăng xuất'),
-      content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Hủy'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Đăng xuất'),
-        ),
-      ],
-    ),
-  );
+// LƯU Ý: Đây là template code, cần copy vào trong một StatefulWidget hoặc StatelessWidget
+// để có thể sử dụng 'context' và 'mounted' (nếu là StatefulWidget)
 
-  if (shouldLogout == true) {
-    await SessionManager.logout();
-    if (mounted) {
+// Ví dụ cho StatefulWidget:
+/*
+class YourDashboard extends StatefulWidget {
+  @override
+  State<YourDashboard> createState() => _YourDashboardState();
+}
+
+class _YourDashboardState extends State<YourDashboard> {
+  Future<void> _handleLogout() async {
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận đăng xuất'),
+        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      await SessionManager.logout();
+      if (mounted) {
+        context.go(AppRouter.login);
+      }
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    // Your widget code here
+    return Container();
+  }
+}
+*/
+
+// Ví dụ cho StatelessWidget:
+/*
+class YourDashboard extends StatelessWidget {
+  Future<void> _handleLogout(BuildContext context) async {
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận đăng xuất'),
+        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      await SessionManager.logout();
       context.go(AppRouter.login);
     }
   }
+  
+  @override
+  Widget build(BuildContext context) {
+    // Your widget code here
+    return Container();
+  }
 }
+*/
 
 // 3. TEMPLATE CHO TEACHER DASHBOARD
-Widget buildTeacherHeader() {
+// LƯU Ý: Đây là template code, cần copy vào trong một class Widget
+/*
+Widget buildTeacherHeader(BuildContext context, VoidCallback onLogout) {
   return AppHeader(
     userRole: 'Giảng viên',
     userName: 'Tên giảng viên', // Thay bằng tên thật
@@ -53,12 +111,15 @@ Widget buildTeacherHeader() {
       // TODO: Implement notification functionality
       print('Teacher notifications pressed');
     },
-    onLogout: _handleLogout,
+    onLogout: onLogout,
   );
 }
+*/
 
 // 4. TEMPLATE CHO STUDENT DASHBOARD
-Widget buildStudentHeader() {
+// LƯU Ý: Đây là template code, cần copy vào trong một class Widget
+/*
+Widget buildStudentHeader(BuildContext context, VoidCallback onLogout) {
   return AppHeader(
     userRole: 'Sinh viên',
     userName: 'Tên sinh viên', // Thay bằng tên thật
@@ -71,18 +132,21 @@ Widget buildStudentHeader() {
       // TODO: Implement notification functionality
       print('Student notifications pressed');
     },
-    onLogout: _handleLogout,
+    onLogout: onLogout,
   );
 }
+*/
 
 // 5. CÁCH SỬ DỤNG TRONG BUILD METHOD
+// LƯU Ý: Đây là template code, cần copy vào trong một class Widget
+/*
 @override
 Widget build(BuildContext context) {
   return Scaffold(
     body: Column(
       children: [
         // Thay thế header cũ bằng một trong hai template trên
-        buildTeacherHeader(), // hoặc buildStudentHeader()
+        buildTeacherHeader(context, _handleLogout), // hoặc buildStudentHeader(context, _handleLogout)
         
         // Nội dung dashboard của bạn
         Expanded(
@@ -94,6 +158,7 @@ Widget build(BuildContext context) {
     ),
   );
 }
+*/
 
 // ========================================
 // 📝 HƯỚNG DẪN SỬ DỤNG:
@@ -104,3 +169,4 @@ Widget build(BuildContext context) {
 // 4. Thay thế header cũ trong build() method
 // 5. Customize userName và các thuộc tính khác nếu cần
 // ========================================
+

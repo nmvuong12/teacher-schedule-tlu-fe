@@ -23,23 +23,101 @@ class NetworkService {
   }
 
   // ✅ Login API - Gọi endpoint auth/login của backend (hỗ trợ BCrypt password)
+  // Backend expect username/password trong query parameters
   static Future<LoginResponse> login(String username, String password) async {
     try {
-      // Gọi API login đúng của backend
+      // Backend expect query parameters (theo error message: "Required request parameter 'username'")
+      // URL encode username và password để xử lý ký tự đặc biệt
+      final encodedUsername = Uri.encodeQueryComponent(username.trim());
+      final encodedPassword = Uri.encodeQueryComponent(password);
+      
+      // Build URI với query parameters
+      final uri = Uri.parse('$baseUrl/auth/login?username=$encodedUsername&password=$encodedPassword');
+      
+      print('🔐 Login request: POST $uri');
+      print('🔐 Username: $username');
+      print('🔐 Password length: ${password.length}');
+      print('🔐 Password preview: ${password.length > 0 ? password.substring(0, password.length > 10 ? 10 : password.length) + '...' : '(empty)'}');
+      print('🔐 Is password hashed? ${password.startsWith('\$2a\$') || password.startsWith('\$2b\$') || password.startsWith('\$2y\$')}');
+      
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/login?username=$username&password=$password'),
-        headers: {'Content-Type': 'application/json'},
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       ).timeout(const Duration(seconds: 10));
+      
+      print('📥 Login response status: ${response.statusCode}');
+      print('📥 Login response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final userData = json.decode(response.body);
-        final user = UserModel.fromJson(userData);
+        print('🔍 Login response data: $userData');
+        print('🔍 Full response keys: ${userData.keys.toList()}');
+        print('🔍 teacherId in response (teacherId): ${userData['teacherId']}');
+        print('🔍 teacherId in response (teacher_id): ${userData['teacher_id']}');
+        print('🔍 id in response: ${userData['id']}');
+        print('🔍 userId in response: ${userData['userId']}');
+        print('🔍 username in response: ${userData['username']}');
+        
+        var user = UserModel.fromJson(userData);
+        print('🔍 UserModel parsed - id: ${user.id}, teacherId: ${user.teacherId}, studentId: ${user.studentId}, username: ${user.username}, role: ${user.role}');
+        
+        // Nếu role là teacher (1) và teacherId null, thử dùng id làm teacherId
+        if (user.role == 1 && user.teacherId == null && user.id > 0) {
+          print('⚠️ teacherId is null for teacher role, using id as teacherId');
+          user = UserModel(
+            id: user.id,
+            teacherId: user.id, // Dùng id làm teacherId
+            studentId: user.studentId,
+            username: user.username,
+            password: user.password,
+            email: user.email,
+            role: user.role,
+            fullName: user.fullName,
+            department: user.department,
+            phone: user.phone,
+            isActive: user.isActive,
+          );
+        }
+        
+        // Nếu role là student (2) và studentId null, thử dùng id làm studentId
+        if (user.role == 2 && user.studentId == null && user.id > 0) {
+          print('⚠️ studentId is null for student role, using id as studentId');
+          user = UserModel(
+            id: user.id,
+            teacherId: user.teacherId,
+            studentId: user.id, // Dùng id làm studentId
+            username: user.username,
+            password: user.password,
+            email: user.email,
+            role: user.role,
+            fullName: user.fullName,
+            department: user.department,
+            phone: user.phone,
+            isActive: user.isActive,
+          );
+        }
+        
+        print('🔍 Final user before save - id: ${user.id}, teacherId: ${user.teacherId}, username: ${user.username}');
+        
         final String token = base64Encode(
           Uint8List.fromList(
             utf8.encode('${user.username}:${user.role}:${DateTime.now().millisecondsSinceEpoch}')
           )
         );
-        await SessionManager.saveSession(token: token, user: user);
+        final userJsonToSave = user.toJson();
+        print('🔍 UserJson to save: $userJsonToSave');
+        print('🔍 teacherId in userJsonToSave: ${userJsonToSave['teacherId']}');
+        await SessionManager.saveSession(token: token, userJson: userJsonToSave);
+        
+        // Verify saved session
+        final (_, savedUserJson) = await SessionManager.loadSession();
+        print('✅ Session saved - verifying...');
+        print('📦 Saved userJson: $savedUserJson');
+        print('📦 teacherId in saved JSON: ${savedUserJson?['teacherId']}');
+        print('📦 id in saved JSON: ${savedUserJson?['id']}');
         
         return LoginResponse(
           success: true,
@@ -51,11 +129,18 @@ class NetworkService {
         // Xử lý lỗi từ backend
         try {
           final error = json.decode(response.body);
+          final errorMessage = error['error'] ?? error['message'] ?? 'Tài khoản hoặc mật khẩu không chính xác';
+          
+          print('❌ Login failed: $errorMessage');
+          print('❌ Response status: ${response.statusCode}');
+          print('❌ Response body: ${response.body}');
+          
           return LoginResponse(
             success: false,
-            message: error['error'] ?? 'Tài khoản hoặc mật khẩu không chính xác',
+            message: errorMessage,
           );
         } catch (e) {
+          print('❌ Error parsing error response: $e');
           return LoginResponse(
             success: false,
             message: 'Tài khoản hoặc mật khẩu không chính xác',

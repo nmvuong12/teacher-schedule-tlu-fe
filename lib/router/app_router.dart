@@ -55,15 +55,16 @@ class AppRouter {
     initialLocation: splash,
     redirect: (context, state) async {
       // (Phần redirect của bạn đã ổn, giữ nguyên)
-      final (token, user) = await SessionManager.loadSession();
-      final bool isLoggedIn = token != null && user != null;
+      final (token, userJson) = await SessionManager.loadSession();
+      final bool isLoggedIn = token != null && userJson != null;
 
       final bool isPublicRoute =
           state.uri.path == splash || state.uri.path == login;
 
       if (isPublicRoute) {
         if (isLoggedIn && state.uri.path == login) {
-          switch (user.role) {
+          final userRole = userJson?['role'] as int? ?? 0;
+          switch (userRole) {
             case 0:
               return dashboard;
             case 1:
@@ -101,21 +102,9 @@ class AppRouter {
         path: teacherDashboard,
         name: 'teacher',
         builder: (context, state) {
-          // 1. Ưu tiên lấy user từ 'extra' (được truyền khi điều hướng)
-          UserModel? user = state.extra as UserModel?;
-
-          // 2. Nếu 'extra' rỗng (VD: người dùng F5 trình duyệt),
-          //    thử lấy từ AppController (đã được splash screen set)
-          user ??= Provider.of<AppController>(context, listen: false).currentUser;
-
-          // 3. Nếu cả hai đều rỗng, dùng 'Guest' (dự phòng cuối cùng)
-
           // [SỬA LỖI] - Tên lớp phải là 'TeacherMainScreen'
           // để khớp với file import (dòng 27)
-          return TeacherMainScreen(
-              user: user ??
-                  UserModel(
-                      id: 0, username: 'Guest', email: '', role: 1));
+          return const TeacherMainScreen();
         },
       ),
 
@@ -124,17 +113,16 @@ class AppRouter {
         path: studentDashboard,
         name: 'student',
         builder: (context, state) {
-          // 1. Ưu tiên lấy user từ 'extra'
-          UserModel? user = state.extra as UserModel?;
-
-          // 2. Nếu 'extra' rỗng, thử lấy từ AppController
-          user ??= Provider.of<AppController>(context, listen: false).currentUser;
-
-          // 3. Nếu cả hai đều rỗng, dùng 'Guest'
+          // 1. Ưu tiên lấy từ 'extra'
+          final extra = state.extra as Map<String, dynamic>?;
+          
+          // 2. Nếu 'extra' rỗng, dùng giá trị mặc định
+          final studentId = extra?['studentId'] as int? ?? 0;
+          final studentName = extra?['studentName'] as String? ?? 'Guest';
           return StudentDashboard(
-              user: user ??
-                  UserModel(
-                      id: 0, username: 'Guest', email: '', role: 2));
+            studentId: studentId,
+            studentName: studentName,
+          );
         },
       ),
 

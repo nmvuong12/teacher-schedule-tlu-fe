@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../data/model/user_model.dart';
 import '../../../data/model/session_model.dart';
 import '../../../data/repo/session_repository.dart';
+import '../../../core/api_service/session_manager.dart';
 import 'attendence_screen.dart';
 import 'content_detail_screen.dart';
 
@@ -24,25 +25,94 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSessions();
+    _loadSessionsFromSession();
   }
 
-  void _loadSessions() {
-    if (widget.user.teacherId != null) {
+  Future<void> _loadSessionsFromSession() async {
+    try {
+      final (_, userJson) = await SessionManager.loadSession();
+      if (userJson != null) {
+        print('🔍 TeacherHomeScreen: Loading sessions from session');
+        print('📦 Full userJson: $userJson');
+        print('📦 teacherId in userJson: ${userJson['teacherId']}');
+        print('📦 id in userJson: ${userJson['id']}');
+        print('📦 username in userJson: ${userJson['username']}');
+        
+        final user = UserModel.fromJson(userJson);
+        print('📦 UserModel parsed - id: ${user.id}, teacherId: ${user.teacherId}, username: ${user.username}');
+        
+        // Ưu tiên dùng teacherId, nếu null thì dùng id
+        final teacherId = user.teacherId ?? user.id;
+        
+        print('📦 Final teacherId to use: $teacherId');
+        
+        if (teacherId != null && teacherId > 0) {
+          print('✅ Loading sessions for teacherId: $teacherId');
+          setState(() {
+            // Lấy lịch hôm nay của giảng viên
+            _sessionsFuture = _fetchTodaySessions(teacherId);
+          });
+        } else {
+          print('⚠️ TeacherHomeScreen: No valid teacherId found');
+          setState(() {
+            _sessionsFuture = Future.error("Tài khoản giáo viên không hợp lệ (thiếu teacherId).");
+          });
+        }
+      } else {
+        print('⚠️ TeacherHomeScreen: No session found');
+        setState(() {
+          _sessionsFuture = Future.error("Không tìm thấy thông tin đăng nhập.");
+        });
+      }
+    } catch (e) {
+      print('❌ TeacherHomeScreen: Error loading session: $e');
       setState(() {
-        _sessionsFuture = _sessionRepository.fetchSessionsByTeacherAndDate(
-          teacherId: widget.user.teacherId!,
-        );
-      });
-    } else {
-      setState(() {
-        _sessionsFuture = Future.error("Tài khoản giáo viên không hợp lệ (thiếu teacherId).");
+        _sessionsFuture = Future.error("Lỗi khi tải thông tin: $e");
       });
     }
   }
 
+  // Lấy lịch hôm nay của teacher đăng nhập
+  Future<List<Session>> _fetchTodaySessions(int teacherId) async {
+    try {
+      final today = DateTime.now();
+      print('📞 TeacherHomeScreen: Fetching today sessions for teacherId: $teacherId, date: ${DateFormat('yyyy-MM-dd').format(today)}');
+      
+      // Lấy lịch hôm nay của teacher
+      final todaySessions = await _sessionRepository.fetchSessionsByTeacherAndDate(
+        teacherId: teacherId,
+        date: today,
+      );
+      
+      print('📦 Found ${todaySessions.length} sessions today for teacher $teacherId');
+      
+      // Sắp xếp theo thời gian bắt đầu
+      todaySessions.sort((a, b) {
+        // Sắp xếp theo date trước, sau đó theo startTime
+        if (a.date.compareTo(b.date) != 0) {
+          return a.date.compareTo(b.date);
+        }
+        // Nếu cùng ngày, sắp xếp theo thời gian bắt đầu (startTime là DateTime)
+        return a.startTime.compareTo(b.startTime);
+      });
+      
+      print('✅ Found ${todaySessions.length} sessions today');
+      
+      return todaySessions;
+    } catch (e) {
+      print('❌ Error fetching today sessions: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
+      return [];
+    }
+  }
+
+  void _loadSessions() {
+    // Deprecated: Use _loadSessionsFromSession instead
+    _loadSessionsFromSession();
+  }
+
   Future<void> _refreshSessions() async {
-    _loadSessions();
+    await _loadSessionsFromSession();
   }
 
   // ✅ 2. SỬA HÀM NÀY ĐỂ CẬP NHẬT MỘT MỤC
@@ -121,7 +191,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            "Lịch trình hôm nay (${_sessionsList.length} buổi học)",
+            "Lịch hôm nay (${_sessionsList.length} buổi học)",
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
           ),
           const SizedBox(height: 16),

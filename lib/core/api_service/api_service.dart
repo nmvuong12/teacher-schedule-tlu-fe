@@ -78,7 +78,7 @@ class ApiService {
       if (response.statusCode == 200 && response.data != null) {
         final user = UserModel.fromJson(response.data);
         final String fakeToken = base64Encode(utf8.encode('${user.username}:${user.role}:${DateTime.now().millisecondsSinceEpoch}'));
-        await SessionManager.saveSession(token: fakeToken, user: user);
+        await SessionManager.saveSession(token: fakeToken, userJson: user.toJson());
 
         return LoginResponse(
           success: true,
@@ -259,10 +259,9 @@ class ApiService {
   Future<List<Session>> getFutureSessionsByTeacher(int teacherId) async {
     try {
       debugPrint("🔍 Fetching future sessions for teacher $teacherId");
-      // Sửa endpoint này để khớp với controller
+      // Sử dụng endpoint chuyên dụng để lấy scheduled sessions của teacher cụ thể
       final response = await _dio.get(
-        '/sessions',
-        queryParameters: {'teacherId': teacherId}, //
+        '/sessions/scheduled/teacher/$teacherId',
       );
       final allSessions = (response.data as List)
           .map((json) => Session.fromJson(json))
