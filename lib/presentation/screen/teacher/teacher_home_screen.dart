@@ -246,9 +246,16 @@ class ExpandableClassCard extends StatelessWidget {
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: [
           const Divider(height: 16),
+
+          // ✅✅✅ DÒNG ĐÃ THÊM ✅✅✅
+          // Hiển thị tên lớp (className)
+          _buildDetailRow(Icons.class_outlined, "Lớp:", session.className ?? 'N/A'),
+
           _buildDetailRow(Icons.meeting_room, "Phòng học:", session.classroom),
+
           // ✅ Hiển thị trạng thái với màu
           _buildDetailRow(Icons.info_outline, "Trạng thái:", statusText, valueColor: statusColor),
+
           const SizedBox(height: 16),
           Row(
             children: [
@@ -285,8 +292,10 @@ class ExpandableClassCard extends StatelessWidget {
 
   Widget _buildActionButton(BuildContext context, String text, IconData icon, Color color) {
     VoidCallback? onPressed;
+
+    // ✅ SỬA: Lấy cả className để truyền đi
     final String courseTitle = session.subjectName ?? 'N/A';
-    final String classInfo = 'Phòng: ${session.classroom}';
+    final String classInfo = '${session.className ?? 'Lớp N/A'} - Phòng: ${session.classroom}'; // vd: "64KTPM3 - Phòng: D202"
 
     if (text == "Nội dung") {
       onPressed = () async {
@@ -302,7 +311,7 @@ class ExpandableClassCard extends StatelessWidget {
         final result = await Navigator.push(context, MaterialPageRoute(
             builder: (context) => AttendanceScreen(
               courseTitle: courseTitle,
-              classInfo: classInfo,
+              classInfo: classInfo, // ✅ Đã cập nhật
               sessionId: session.sessionId!,
             )));
         onNavigateBack(result);
