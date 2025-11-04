@@ -130,16 +130,25 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
     );
   }
 
+  // ✅✅✅ HÀM ĐÃ SỬA LỖI OVERFLOW ✅✅✅
   Widget _buildClassRow(BuildContext context, GroupedCourse course, CourseClass courseClass) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Sửa: Bỏ MainAxisAlignment.spaceBetween
         children: [
-          Text(
-            courseClass.name,
-            style: const TextStyle(fontSize: 15, color: Colors.black87),
+          // 1. Bọc Text bằng Expanded để nó tự xuống dòng
+          Expanded(
+            child: Text(
+              courseClass.name,
+              style: const TextStyle(fontSize: 15, color: Colors.black87),
+              // softWrap: true, // (Không cần, Text tự động xuống dòng)
+            ),
           ),
+          // 2. Thêm khoảng cách giữa Text và Button
+          const SizedBox(width: 12),
+
+          // 3. Giữ nguyên Button
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -166,4 +175,3 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
     );
   }
 }
-
