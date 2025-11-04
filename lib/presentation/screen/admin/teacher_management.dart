@@ -114,7 +114,8 @@ class _TeacherManagementState extends State<TeacherManagement> {
                       final all = controller.teachers.where((teacher) {
                         if (_searchController.text.isNotEmpty) {
                           final query = _searchController.text.toLowerCase();
-                          return teacher.userName.toLowerCase().contains(query) ||
+                          final teacherName = (teacher.fullName ?? teacher.userName).toLowerCase();
+                          return teacherName.contains(query) ||
                               teacher.department.toLowerCase().contains(query);
                         }
                         return true;
@@ -175,7 +176,7 @@ class _TeacherManagementState extends State<TeacherManagement> {
                                     DataCell(Text(stt.toString())),
                                     DataCell(
                                       Text(
-                                        teacher.userName,
+                                        teacher.fullName ?? teacher.userName,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: Color(0xFF1E3A8A),
@@ -426,7 +427,7 @@ class _TeacherManagementState extends State<TeacherManagement> {
       context: outerContext,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa giảng viên "${teacher.userName}"?'),
+        content: Text('Bạn có chắc chắn muốn xóa giảng viên "${teacher.fullName ?? teacher.userName}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
