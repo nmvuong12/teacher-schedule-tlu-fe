@@ -63,8 +63,17 @@ class AppRouter {
 
       if (isPublicRoute) {
         if (isLoggedIn && state.uri.path == login) {
-          final userRole = userJson?['role'] as int? ?? 0;
-          switch (userRole) {
+// <<<<<<< HEAD
+//           final userRole = userJson?['role'] as int? ?? 0;
+//           switch (userRole) {
+// =======
+          // Ensure provider knows current user on direct access to /login
+          final user = UserModel.fromJson(userJson);
+          try {
+            Provider.of<AppController>(context, listen: false).currentUser = user;
+          } catch (_) {}
+          switch (user.role) {
+// >>>>>>> 57b66c4 (validate hoc phan, qli buoi hoc 4/11/25)
             case 0:
               return dashboard;
             case 1:
@@ -79,6 +88,13 @@ class AppRouter {
       }
       if (!isPublicRoute && !isLoggedIn) {
         return login;
+      }
+      // If accessing protected routes directly via URL or F5, set currentUser into provider
+      if (!isPublicRoute && isLoggedIn) {
+        try {
+          final user = UserModel.fromJson(userJson);
+          Provider.of<AppController>(context, listen: false).currentUser = user;
+        } catch (_) {}
       }
       return null;
     },
@@ -205,16 +221,21 @@ class AdminDashboardWrapper extends StatefulWidget {
 
 class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
   int _selectedIndex = 0;
+  String? _lastRoute; // Track last route to detect route changes
 
   @override
   void initState() {
     super.initState();
-    // Initialize data when dashboard loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Sửa lại: Chỉ initialize nếu là admin
-      final user = context.read<AppController>().currentUser;
-      if (user != null && user.role == 0) {
-        context.read<AppController>().initialize();
+    // Ensure currentUser is available when landing directly on a protected route (F5)
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final controller = context.read<AppController>();
+      if (controller.currentUser == null) {
+        final (token, userJson) = await SessionManager.loadSession();
+        if (token != null && userJson != null) {
+          final user = UserModel.fromJson(userJson);
+          controller.currentUser = user;
+          controller.refreshDataForRoute(GoRouterState.of(context).uri.path);
+        }
       }
     });
   }
@@ -225,6 +246,26 @@ class _AdminDashboardWrapperState extends State<AdminDashboardWrapper> {
     // Update selected index based on current route
     final location = GoRouterState.of(context).uri.path;
     _updateSelectedIndex(location);
+
+    // Load data only when route changes (not on initial load)
+    if (_lastRoute != null && _lastRoute != location) {
+      // Route changed, load data for this specific route
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final user = context.read<AppController>().currentUser;
+        if (user != null && user.role == 0) {
+          context.read<AppController>().refreshDataForRoute(location);
+        }
+      });
+    } else if (_lastRoute == null) {
+      // Initial load - load data for current route
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final user = context.read<AppController>().currentUser;
+        if (user != null && user.role == 0) {
+          context.read<AppController>().refreshDataForRoute(location);
+        }
+      });
+    }
+    _lastRoute = location;
   }
 
   void _updateSelectedIndex(String location) {

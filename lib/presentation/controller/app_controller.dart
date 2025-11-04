@@ -62,6 +62,27 @@ class AppController extends ChangeNotifier {
           session.date.day == today.day;
     }).toList();
   }
+
+  // Tổng số giờ giảng dạy của 1 giảng viên (tính từ danh sách buổi học + học phần)
+  double teacherTotalHours(int teacherId) {
+    // Lấy tất cả sectionId thuộc giáo viên
+    final sectionIds = _courseSections
+        .where((cs) => cs.teacherId == teacherId)
+        .map((cs) => cs.sectionId)
+        .whereType<int>()
+        .toSet();
+    if (sectionIds.isEmpty) return 0.0;
+
+    // Lọc sessions thuộc các section đó và tính tổng giờ
+    int totalMinutes = 0;
+    for (final s in _sessions) {
+      if (sectionIds.contains(s.sectionId)) {
+        final minutes = s.endTime.difference(s.startTime).inMinutes;
+        if (minutes > 0) totalMinutes += minutes;
+      }
+    }
+    return totalMinutes / 60.0;
+  }
   List<TeachingLeave> get recentLeaveRequests {
     final sortedLeaves = List<TeachingLeave>.from(_teachingLeaves);
     sortedLeaves.sort((a, b) => b.expectedMakeupDate.compareTo(a.expectedMakeupDate));
@@ -451,7 +472,7 @@ class AppController extends ChangeNotifier {
   Future<bool> createCourseSection(CourseSection courseSection) async {
     try {
       if (isDuplicateCourseSection(courseSection)) {
-        throw Exception('Học phần này đã tồn tại với cùng lớp, môn học, giảng viên, học kỳ và ca học');
+        throw Exception('Học phần trùng môn + lớp + giảng viên + học kỳ + ca học');
       }
 
       await ApiService.instance.createCourseSection(courseSection.toJson());
@@ -459,7 +480,7 @@ class AppController extends ChangeNotifier {
       return true;
     } catch (e) {
       print('Error creating course section: $e');
-      return false;
+      rethrow; // để UI hiển thị thông báo chi tiết
     }
   }
 
@@ -473,7 +494,7 @@ class AppController extends ChangeNotifier {
       return false;
     } catch (e) {
       print('Error updating course section: $e');
-      return false;
+      rethrow;
     }
   }
 
@@ -520,5 +541,67 @@ class AppController extends ChangeNotifier {
   // Refresh all data
   Future<void> refreshAllData() async {
     await loadInitialData();
+  }
+
+  // Refresh data for specific route (only load what's needed)
+  Future<void> refreshDataForRoute(String route) async {
+    if (!_isLoggedIn) return;
+
+    try {
+      switch (route) {
+        case '/dashboard':
+        case '/statistics':
+          // Dashboard and statistics need all data for overview
+          await loadInitialData();
+          break;
+        case '/courses':
+          await loadCourseSections();
+          // Also load related data for dropdowns
+          await Future.wait([
+            loadClasses(),
+            loadSubjects(),
+            loadTeachers(),
+          ]);
+          break;
+        case '/sessions':
+          await loadSessions();
+          // Also load related data for dropdowns
+          await Future.wait([
+            loadCourseSections(),
+          ]);
+          break;
+        case '/leave-requests':
+          await loadTeachingLeaves();
+          // Also load related data for dropdowns
+          await Future.wait([
+            loadSessions(),
+          ]);
+          break;
+        case '/users':
+          await loadUsers();
+          break;
+        case '/classes':
+          await loadClasses();
+          break;
+        case '/students':
+          await loadStudents();
+          // Also load related data for dropdowns
+          await Future.wait([
+            loadClasses(),
+          ]);
+          break;
+        case '/teachers':
+          await loadTeachers();
+          break;
+        case '/subjects':
+          await loadSubjects();
+          break;
+        default:
+          // Unknown route, don't load anything
+          break;
+      }
+    } catch (e) {
+      print('Error loading data for route $route: $e');
+    }
   }
 }

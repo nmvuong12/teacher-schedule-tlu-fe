@@ -182,7 +182,7 @@ class _CourseManagementState extends State<CourseManagement> {
                                           DataCell(Text('IT${(section.sectionId ?? 0).toString().padLeft(4, '0')}')),
                                           DataCell(Text(section.subjectName)),
                                           DataCell(Text(section.className)),
-                                          DataCell(Text(section.weeklySessions)),
+                                          DataCell(Text(section.weeklySessionsLabel)),
                                           DataCell(Text(section.teacherName)),
                                           DataCell(_buildStatusChip(section.displayStatus)),
                                           DataCell(

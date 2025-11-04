@@ -25,7 +25,7 @@ class _CourseSectionFormState extends State<CourseSectionForm> {
   // Weekly sessions now selected via chips, controller removed
   
   String _selectedSemester = '';
-  String _selectedShift = 'sáng';
+  String _selectedShift = '1';
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 90));
   String _selectedClassroom = '111';
@@ -51,10 +51,10 @@ class _CourseSectionFormState extends State<CourseSectionForm> {
   }
 
   final List<Map<String, dynamic>> _shiftOptions = const [
-    {'value': 'sáng', 'label': 'Ca 1 - Sáng'},
-    {'value': 'chiều', 'label': 'Ca 2 - Chiều'},
-    {'value': 'tối', 'label': 'Ca 3 - Tối'},
-    {'value': 'tối', 'label': 'Ca 4 - Tối'},
+    {'value': '1', 'label': 'Ca 1 (07:00 - 09:35)'},
+    {'value': '2', 'label': 'Ca 2 (09:40 - 12:25)'},
+    {'value': '3', 'label': 'Ca 3 (12:55 - 15:35)'},
+    {'value': '4', 'label': 'Ca 4 (15:40 - 18:20)'},
   ];
 
   static const List<String> _weekdayLabels = <String>[
@@ -68,14 +68,38 @@ class _CourseSectionFormState extends State<CourseSectionForm> {
       _subjectNameController.text = widget.courseSection!.subjectName;
       _classNameController.text = widget.courseSection!.className;
       _teacherNameController.text = widget.courseSection!.teacherName;
-      // Preselect weekdays from stored comma-separated string
+      // Preselect weekdays from stored codes -> labels
       final rawWeekdays = widget.courseSection!.weeklySessions.split(',');
       for (final w in rawWeekdays) {
         final trimmed = w.trim();
-        if (trimmed.isNotEmpty) _selectedWeekdays.add(trimmed);
+        if (trimmed.isEmpty) continue;
+        switch (trimmed) {
+          case '2': _selectedWeekdays.add('Hai'); break;
+          case '3': _selectedWeekdays.add('Ba'); break;
+          case '4': _selectedWeekdays.add('Tư'); break;
+          case '5': _selectedWeekdays.add('Năm'); break;
+          case '6': _selectedWeekdays.add('Sáu'); break;
+          case '7': _selectedWeekdays.add('Bảy'); break;
+          case '8': _selectedWeekdays.add('Chủ nhật'); break;
+          default: _selectedWeekdays.add(trimmed); // fallback
+        }
       }
       _selectedSemester = widget.courseSection!.semester;
-      _selectedShift = widget.courseSection!.shift;
+      // Normalize shift to numeric 1-4 for dropdown value
+      final s = (widget.courseSection!.shift).toString().trim().toLowerCase();
+      if (RegExp(r'^[1-4]$').hasMatch(s)) {
+        _selectedShift = s;
+      } else if (s == 'sáng' || s == 'morning' || s == 'ca 1') {
+        _selectedShift = '1';
+      } else if (s == 'chiều' || s == 'afternoon' || s == 'ca 2') {
+        _selectedShift = '2';
+      } else if (s == 'tối' || s == 'evening' || s == 'ca 3') {
+        _selectedShift = '3';
+      } else if (s == 'ca 4') {
+        _selectedShift = '4';
+      } else {
+        _selectedShift = '1';
+      }
       _startDate = widget.courseSection!.startDate;
       _endDate = widget.courseSection!.endDate;
       if ((widget.courseSection!.classroom ?? '').isNotEmpty) {
@@ -297,6 +321,20 @@ class _CourseSectionFormState extends State<CourseSectionForm> {
                               );
                               return;
                             }
+                            String _weekdayToCode(String label) {
+                              switch (label) {
+                                case 'Hai': return '2';
+                                case 'Ba': return '3';
+                                case 'Tư': return '4';
+                                case 'Năm': return '5';
+                                case 'Sáu': return '6';
+                                case 'Bảy': return '7';
+                                case 'Chủ nhật': return '8'; // dùng 8 đại diện CN
+                                default: return label;
+                              }
+                            }
+                            final weekly = _selectedWeekdays.map(_weekdayToCode).join(',');
+
                             final courseSection = CourseSection(
                               sectionId: widget.courseSection?.sectionId,
                               classId: effectiveClassId,
@@ -307,7 +345,7 @@ class _CourseSectionFormState extends State<CourseSectionForm> {
                               shift: _selectedShift,
                               startDate: _startDate,
                               endDate: _endDate,
-                              weeklySessions: _selectedWeekdays.join(', '),
+                              weeklySessions: weekly,
                               teacherId: effectiveTeacherId,
                               teacherName: effectiveTeacherName,
                               classroom: _selectedClassroom,
@@ -330,6 +368,19 @@ class _CourseSectionFormState extends State<CourseSectionForm> {
         );
       },
     );
+  }
+
+  String _codeToWeekdayLabel(String code) {
+    switch (code) {
+      case '2': return 'Hai';
+      case '3': return 'Ba';
+      case '4': return 'Tư';
+      case '5': return 'Năm';
+      case '6': return 'Sáu';
+      case '7': return 'Bảy';
+      case '8': return 'Chủ nhật';
+      default: return code;
+    }
   }
 
   String _formatDate(DateTime date) {

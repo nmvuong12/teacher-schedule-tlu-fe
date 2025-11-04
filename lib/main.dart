@@ -19,7 +19,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => AppController(),
+      create: (context) {
+        final controller = AppController();
+        // Optional: preload minimal data after app starts
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          controller.initialize();
+        });
+        return controller;
+      },
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: 'Hệ thống quản lý lịch trình giảng dạy',
