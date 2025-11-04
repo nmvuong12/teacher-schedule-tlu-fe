@@ -86,8 +86,24 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       
       print('📦 Found ${todaySessions.length} sessions today for teacher $teacherId');
       
+      // Filter loại bỏ các session đã hủy
+      final activeSessions = todaySessions.where((session) {
+        final status = session.status.trim().toLowerCase();
+        final isCancelled = status == 'đã hủy' ||
+                           status.contains('hủy') ||
+                           status.contains('cancelled');
+        
+        if (isCancelled) {
+          print('❌ Filtering out cancelled session ${session.sessionId}: status="${session.status}"');
+          return false;
+        }
+        return true;
+      }).toList();
+      
+      print('✅ After filtering: ${activeSessions.length} active sessions today (removed ${todaySessions.length - activeSessions.length} cancelled)');
+      
       // Sắp xếp theo thời gian bắt đầu
-      todaySessions.sort((a, b) {
+      activeSessions.sort((a, b) {
         // Sắp xếp theo date trước, sau đó theo startTime
         if (a.date.compareTo(b.date) != 0) {
           return a.date.compareTo(b.date);
@@ -96,9 +112,9 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         return a.startTime.compareTo(b.startTime);
       });
       
-      print('✅ Found ${todaySessions.length} sessions today');
+      print('✅ Found ${activeSessions.length} sessions today');
       
-      return todaySessions;
+      return activeSessions;
     } catch (e) {
       print('❌ Error fetching today sessions: $e');
       print('❌ Stack trace: ${StackTrace.current}');
