@@ -77,7 +77,39 @@ class _TeacherScheduleScreenState extends State<TeacherScheduleScreen> {
     final List data = json.decode(res.body) as List;
     print('✅ Parsed ${data.length} sessions');
     
-    return data.map((e) => SessionDto.fromJson(e)).toList();
+    // Parse tất cả sessions
+    final allSessions = data.map((e) => SessionDto.fromJson(e)).toList();
+    
+    // Debug: In ra tất cả status để kiểm tra
+    print('🔍 All session statuses:');
+    for (var session in allSessions) {
+      print('  - Session ${session.sessionId}: status="${session.status}"');
+    }
+    
+    // Filter loại bỏ các session đã hủy
+    final activeSessions = allSessions.where((session) {
+      final status = session.status.trim();
+      
+      // Kiểm tra chính xác status "Đã hủy" (tiếng Việt) hoặc "cancelled" (tiếng Anh)
+      // Sử dụng so sánh chính xác và contains để bắt tất cả các biến thể
+      final statusLower = status.toLowerCase();
+      final isCancelled = status == 'Đã hủy' ||
+                         status == 'đã hủy' ||
+                         statusLower == 'cancelled' ||
+                         statusLower.contains('hủy') ||
+                         statusLower.contains('cancelled');
+      
+      if (isCancelled) {
+        print('❌ Filtering out cancelled session ${session.sessionId}: status="$status"');
+        return false;
+      }
+      
+      return true;
+    }).toList();
+    
+    print('✅ Filtered: ${activeSessions.length} active sessions (removed ${allSessions.length - activeSessions.length} cancelled sessions)');
+    
+    return activeSessions;
   }
 
   void _refresh() async {
