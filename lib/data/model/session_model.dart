@@ -30,6 +30,7 @@ class Session {
   // Các trường từ session.dart
   final String? subjectName;
   final String? className; // <-- Đổi tên từ sectionName
+  final String? sectionName; // Tên học phần từ CourseSection
 
   // Các trường từ session_model.dart
   final int? studentCount;
@@ -50,6 +51,7 @@ class Session {
     required this.endTime,
     this.subjectName,
     this.className, // <-- Đổi tên từ sectionName
+    this.sectionName, // Tên học phần
     this.studentCount,
     this.isAttendanceCompleted,
     this.isContentCompleted,
@@ -112,7 +114,8 @@ class Session {
 
       // Các trường đã gộp (Tên đã khớp với SessionDTO.java)
       subjectName: json["subjectName"],
-      className: json["className"] ?? json["sectionName"], // Lấy 1 trong 2
+      className: json["className"], // Tên lớp
+      sectionName: json["sectionName"], // Tên học phần (từ CourseSection.sectionName)
       studentCount: json["studentCount"] == null ? null : _parseInt(json["studentCount"]),
       isAttendanceCompleted: json["isAttendanceCompleted"],
       isContentCompleted: json["isContentCompleted"],
@@ -135,7 +138,8 @@ class Session {
 
       // Các trường đã gộp
       "subjectName": subjectName,
-      "className": className ?? sectionName, // Đảm bảo dùng tên gốc nếu className null
+      "className": className,
+      "sectionName": sectionName,
       "studentCount": studentCount,
       "isAttendanceCompleted": isAttendanceCompleted,
       "isContentCompleted": isContentCompleted,
@@ -150,8 +154,8 @@ class Session {
     return json;
   }
 
-  // Getter phụ để tương thích với logic cũ (nếu cần)
-  String? get sectionName => className;
+  // Getter để lấy tên hiển thị (ưu tiên sectionName từ CourseSection)
+  String? get displaySectionName => sectionName ?? className ?? subjectName;
 
   // Getter 'timeRange' từ session.dart (giờ đã hoạt động)
   String get timeRange {

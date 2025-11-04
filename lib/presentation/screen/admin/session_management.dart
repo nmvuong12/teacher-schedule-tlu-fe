@@ -273,10 +273,15 @@ class _SessionManagementState extends State<SessionManagement> {
                             final today = DateTime(now.year, now.month, now.day);
 
                             final all = controller.sessions.where((session) {
+                              // ✅ Lọc bỏ các buổi học có trạng thái "Đã hủy"
+                              if (session.status == 'Đã hủy') {
+                                return false;
+                              }
+                              
                               // Text search filter
                               if (_searchController.text.isNotEmpty) {
                                 final query = _searchController.text.toLowerCase();
-                                final sectionName = session.className ?? session.subjectName ?? '';
+                                final sectionName = session.sectionName ?? session.className ?? session.subjectName ?? '';
                                 if (!(session.content ?? '').toLowerCase().contains(query) &&
                                     !session.classroom.toLowerCase().contains(query) &&
                                     !(session.label ?? '').toLowerCase().contains(query) &&
@@ -368,7 +373,8 @@ class _SessionManagementState extends State<SessionManagement> {
                                     rows: pageItems.asMap().entries.map((entry) {
                                       final index = entry.key;
                                       final session = entry.value;
-                                      final sectionName = session.className ?? session.subjectName ?? '';
+                                      // ✅ Lấy sectionName từ CourseSection (nếu có), nếu không thì fallback
+                                      final sectionName = session.sectionName ?? session.className ?? session.subjectName ?? '';
                                       final stt = startIndex + index + 1;
 
                                       // Format date as dd/MM/yyyy
