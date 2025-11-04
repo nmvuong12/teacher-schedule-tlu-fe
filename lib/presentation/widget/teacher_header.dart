@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:schedule_ui/shared/widgets/app_header.dart';
 import 'package:schedule_ui/core/api_service/session_manager.dart';
-import 'package:schedule_ui/router/app_router.dart';
 
 class TeacherHeader extends StatelessWidget {
   const TeacherHeader({super.key});
@@ -44,7 +42,7 @@ class TeacherHeader extends StatelessWidget {
         if (shouldLogout == true) {
           await SessionManager.logout();
           if (context.mounted) {
-            context.go(AppRouter.login);
+            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
           }
         }
       },

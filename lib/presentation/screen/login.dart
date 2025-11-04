@@ -36,6 +36,38 @@ class _LoginScreenState extends State<LoginScreen> {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
+    // Debug: In ra password để kiểm tra
+    print('🔍 Login Screen - Username: $username');
+    print('🔍 Login Screen - Password length: ${password.length}');
+    print('🔍 Login Screen - Password preview: ${password.isNotEmpty ? password.substring(0, password.length > 20 ? 20 : password.length) : '(empty)'}');
+    
+    // Kiểm tra xem password có phải là BCrypt hash không
+    final isHashedPassword = password.startsWith('\$2a\$') || 
+                             password.startsWith('\$2b\$') || 
+                             password.startsWith('\$2y\$');
+    
+    if (isHashedPassword) {
+      // Hiển thị cảnh báo nếu người dùng nhập hash
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Vui lòng nhập mật khẩu gốc, không phải mật khẩu đã mã hóa từ database.'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Đóng',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     if (username.isEmpty || password.isEmpty) {
       setState(() {
         _showAuthError = true;
@@ -54,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (response.success && response.user != null && response.token != null) {
-        await SessionManager.saveSession(token: response.token!, user: response.user!);
+        await SessionManager.saveSession(token: response.token!, userJson: response.user!.toJson());
 
         // Báo hiệu thành công cho hệ thống Autofill (để lưu MK)
         TextInput.finishAutofillContext(shouldSave: true);
@@ -73,10 +105,18 @@ class _LoginScreenState extends State<LoginScreen> {
               context.go(AppRouter.dashboard);
               break;
             case 1: // Teacher
-              context.go(AppRouter.teacherDashboard, extra: user);
+              context.go(AppRouter.teacherDashboard);
               break;
             case 2: // Student
-              context.go(AppRouter.studentDashboard, extra: user);
+              // Truyền studentId và studentName như Map để nhất quán với app_router
+              // Ưu tiên dùng studentId từ user, nếu null thì dùng id (fallback)
+              final studentId = user.studentId ?? user.id;
+              final studentName = user.fullName ?? user.username ?? 'Guest';
+              print('🔍 Student login - studentId: $studentId (from user.studentId: ${user.studentId}, user.id: ${user.id})');
+              context.go(AppRouter.studentDashboard, extra: {
+                'studentId': studentId,
+                'studentName': studentName,
+              });
               break;
             default:
             // Nếu không có vai trò, về login

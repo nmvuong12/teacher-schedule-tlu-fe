@@ -29,26 +29,26 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     // Load session từ SharedPreferences
-    final (token, user) = await SessionManager.loadSession();
+    final (token, userJson) = await SessionManager.loadSession();
 
     if (!mounted) return;
 
     // Nếu có token và user (đã đăng nhập trước đó)
-    if (token != null && user != null) {
-      // [SỬA LẠI] - Lưu user vào AppController
-      // để các nơi khác có thể truy cập nếu cần (như AdminDashboard)
-      context.read<AppController>().currentUser = user;
-
+    if (token != null && userJson != null) {
+      final userRole = userJson['role'] as int? ?? 0;
       // [SỬA LẠI] - Điều hướng dựa trên VAI TRÒ (ROLE)
-      switch (user.role) {
+      switch (userRole) {
         case 0: // Admin
           context.go(AppRouter.dashboard);
           break;
         case 1: // Teacher
-          context.go(AppRouter.teacherDashboard, extra: user); // Truyền user qua extra
+          context.go(AppRouter.teacherDashboard); // Truyền user qua extra
           break;
         case 2: // Student
-          context.go(AppRouter.studentDashboard, extra: user); // Truyền user qua extra
+          // Lấy studentId và studentName từ userJson
+          final studentId = userJson['id'] as int? ?? 0;
+          final studentName = userJson['fullName'] as String? ?? userJson['username'] as String? ?? 'Guest';
+          context.go(AppRouter.studentDashboard, extra: {'studentId': studentId, 'studentName': studentName});
           break;
         default:
         // Nếu không có vai trò, về login

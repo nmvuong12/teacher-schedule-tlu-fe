@@ -9,14 +9,14 @@ class AdminHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-              return AppHeader(
-          userRole: 'Admin',
-          userName: 'Admin User',
-          searchHint: 'Tìm kiếm...',
-              onSearchChanged: (value) {
-          // Handle search functionality
-          print('Search: $value');
-    },
+    return AppHeader(
+      userRole: 'Admin',
+      userName: 'Admin User',
+      searchHint: 'Tìm kiếm...',
+      onSearchChanged: (value) {
+        // Handle search functionality
+        print('Search: $value');
+      },
       onNotificationPressed: () {
         // Handle notifications
         print('Notifications pressed');
@@ -33,19 +33,19 @@ class AdminHeader extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(false),
                 child: const Text('Hủy'),
               ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Đăng xuất'),
-                ),
-        ],
-        ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Đăng xuất'),
+              ),
+            ],
+          ),
         );
 
         if (shouldLogout == true) {
-        await SessionManager.logout();
-        if (context.mounted) {
-        context.go(AppRouter.login);
-        }
+          await SessionManager.logout();
+          if (context.mounted) {
+            context.go(AppRouter.login);
+          }
         }
       },
     );

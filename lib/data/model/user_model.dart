@@ -3,6 +3,7 @@ import 'dart:convert'; // Import này cần cho LoginResponse (nếu dùng http)
 class UserModel {
   final int id;
   final int? teacherId;
+  final int? studentId; // Thêm studentId cho student
   final String username;
   final String? password; // [SỬA 1] - Thêm password (giống code cũ)
   final String email;
@@ -15,6 +16,7 @@ class UserModel {
   UserModel({
     required this.id,
     this.teacherId,
+    this.studentId, // Thêm studentId vào constructor
     required this.username,
     this.password, // [SỬA 2] - Thêm password vào constructor
     required this.email,
@@ -27,14 +29,33 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     print('🔍 DEBUG: UserModel.fromJson called with: $json');
+    
+    // Parse teacherId - thử nhiều cách
+    int? teacherId;
+    if (json['teacherId'] != null) {
+      teacherId = (json['teacherId'] as num?)?.toInt();
+    } else if (json['teacher_id'] != null) {
+      teacherId = (json['teacher_id'] as num?)?.toInt();
+    }
+    
+    // Parse studentId - thử nhiều cách
+    int? studentId;
+    if (json['studentId'] != null) {
+      studentId = (json['studentId'] as num?)?.toInt();
+    } else if (json['student_id'] != null) {
+      studentId = (json['student_id'] as num?)?.toInt();
+    }
+    
+    print('🔍 DEBUG: Parsed teacherId: $teacherId, studentId: $studentId');
 
     return UserModel(
-      id: json['userId'] ?? json['id'] ?? 0,
-      teacherId: json['teacherId'],
+      id: (json['userId'] ?? json['id'] as num?)?.toInt() ?? 0,
+      teacherId: teacherId,
+      studentId: studentId, // Parse studentId
       username: json['userName'] ?? json['username'] ?? '',
       password: json['password'], // [SỬA 3] - Đọc password (dù server thường không gửi)
       email: json['email'] ?? '',
-      role: json['role'] ?? 1,
+      role: (json['role'] as num?)?.toInt() ?? 1,
       fullName: json['fullName'] ?? json['full_name'] ?? json['name'],
       department: json['department'],
       phone: json['phone'],
@@ -46,6 +67,7 @@ class UserModel {
     final Map<String, dynamic> json = {
       'id': id,
       'teacherId': teacherId,
+      'studentId': studentId, // Thêm studentId vào JSON
       'username': username,
       'email': email,
       'role': role,
