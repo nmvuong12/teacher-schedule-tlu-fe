@@ -36,6 +36,10 @@ class CourseSection {
   final int sectionId;
   final int classId;
   final String className;
+
+  // ✅ 1. THÊM TRƯỜNG sectionName
+  final String? sectionName; // Tên học phần (vd: "Cơ sở dữ liệu - 64KTPM4")
+
   final int subjectId;
   final String subjectName;
   final int semester;
@@ -50,6 +54,10 @@ class CourseSection {
     required this.sectionId,
     required this.classId,
     required this.className,
+
+    // ✅ 2. THÊM VÀO CONSTRUCTOR
+    this.sectionName,
+
     required this.subjectId,
     required this.subjectName,
     required this.semester,
@@ -78,6 +86,10 @@ class CourseSection {
       sectionId: _parseInt(json["sectionId"]),
       classId: _parseInt(json["classId"]),
       className: json["className"] ?? '',
+
+      // ✅ 3. PARSE sectionName TỪ JSON
+      sectionName: json["sectionName"],
+
       subjectId: _parseInt(json["subjectId"]),
       subjectName: json["subjectName"] ?? '',
       semester: _parseInt(json["semester"]),
@@ -110,7 +122,21 @@ List<GroupedCourse> groupCourseSections(List<CourseSection> sections) {
     final teacherId = firstSection.teacherId;
 
     final classes = subjectSections.map((section) {
-      return CourseClass(sectionId: section.sectionId, name: section.className);
+
+      // ✅✅✅ BẮT ĐẦU SỬA LOGIC HIỂN THỊ ✅✅✅
+      final String displayName;
+
+      // Kiểm tra xem sectionName có null hoặc rỗng không
+      if (section.sectionName != null && section.sectionName!.isNotEmpty) {
+        // Nếu có, hiển thị "SectionName (ClassName)"
+        displayName = "${section.sectionName} (${section.className})";
+      } else {
+        // Nếu không, chỉ hiển thị "ClassName"
+        displayName = section.className;
+      }
+      // ✅✅✅ KẾT THÚC SỬA LOGIC HIỂN THỊ ✅✅✅
+
+      return CourseClass(sectionId: section.sectionId, name: displayName);
     }).toList();
 
     return GroupedCourse(
@@ -122,4 +148,3 @@ List<GroupedCourse> groupCourseSections(List<CourseSection> sections) {
     );
   }).toList();
 }
-

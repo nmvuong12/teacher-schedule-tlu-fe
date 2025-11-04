@@ -339,6 +339,10 @@ class _ContentDetailScreenState extends State<ContentDetailScreen> {
                     _buildInfoRow(Icons.location_on, 'Phòng học:', room),
                     _buildInfoRow(Icons.calendar_today, 'Ngày học:', formattedDate),
                     _buildInfoRow(Icons.access_time, 'Ca học:', timeRange),
+
+                    // ✅✅✅ DÒNG ĐÃ THÊM ✅✅✅
+                    _buildInfoRow(Icons.class_outlined, 'Lớp:', session.className ?? 'N/A'),
+
                     // ✅✅✅ SỬA 3: TRUYỀN `statusText` VÀ `valueColor` ✅✅✅
                     _buildInfoRow(Icons.schedule, 'Trạng thái:', statusText, valueColor: statusColor),
                   ],
