@@ -15,16 +15,17 @@ class TeacherScheduleScreen extends StatefulWidget {
 }
 
 class _TeacherScheduleScreenState extends State<TeacherScheduleScreen> {
-  late Future<List<SessionDto>> future;
+  Future<List<SessionDto>>? future;
 
   @override
   void initState() {
     super.initState();
     print('TeacherScheduleScreen: initState - Starting to fetch data');
-    _loadSessionsFromSession();
+    // Khởi tạo future ngay lập tức để FutureBuilder hiển thị loading state
+    future = _initializeFuture();
   }
 
-  Future<void> _loadSessionsFromSession() async {
+  Future<List<SessionDto>> _initializeFuture() async {
     try {
       final (_, userJson) = await SessionManager.loadSession();
       if (userJson != null) {
@@ -35,27 +36,25 @@ class _TeacherScheduleScreenState extends State<TeacherScheduleScreen> {
         print('📦 teacherId: $teacherId, userId: ${user.id}');
         
         if (teacherId != null && teacherId > 0) {
-          setState(() {
-            future = _fetchSessions(teacherId);
-          });
+          return await _fetchSessions(teacherId);
         } else {
           print('⚠️ TeacherScheduleScreen: No valid teacherId found');
-          setState(() {
-            future = Future.error('Tài khoản giáo viên không hợp lệ (thiếu teacherId)');
-          });
+          throw Exception('Tài khoản giáo viên không hợp lệ (thiếu teacherId)');
         }
       } else {
         print('⚠️ TeacherScheduleScreen: No session found');
-        setState(() {
-          future = Future.error('Không tìm thấy thông tin đăng nhập');
-        });
+        throw Exception('Không tìm thấy thông tin đăng nhập');
       }
     } catch (e) {
       print('❌ TeacherScheduleScreen: Error loading session: $e');
-      setState(() {
-        future = Future.error('Lỗi khi tải thông tin: $e');
-      });
+      throw Exception('Lỗi khi tải thông tin: $e');
     }
+  }
+
+  Future<void> _loadSessionsFromSession() async {
+    setState(() {
+      future = _initializeFuture();
+    });
   }
 
   Future<List<SessionDto>> _fetchSessions(int teacherId) async {
@@ -118,6 +117,11 @@ class _TeacherScheduleScreenState extends State<TeacherScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (future == null) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
     return FutureBuilder<List<SessionDto>>(
       future: future,
       builder: (context, snap) {
@@ -213,6 +217,8 @@ class _TeacherScheduleScreenState extends State<TeacherScheduleScreen> {
                   _row('Bắt đầu', s.formattedStartTime),
                   _row('Kết thúc', s.formattedEndTime),
                   _row('Phòng', s.classroom),
+                  if (s.className != null && s.className!.isNotEmpty)
+                    _row('Tên lớp', s.className!),
                   _row('Trạng thái', s.status),
                   const SizedBox(height: 8),
                   SizedBox(

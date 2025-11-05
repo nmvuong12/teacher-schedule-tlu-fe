@@ -11,6 +11,7 @@ enum SessionStatus {
   completed,        // Đã hoàn thành
   cancelled,        // Đã hủy
   requestedLeave,   // Đã yêu cầu xin nghỉ
+  inProgress,       // ✅ Đã thêm: Đang diễn ra
   rejectedPending,  // Từ chối - Đã lên lịch
   unknown,          // Không xác định
 }
@@ -166,7 +167,10 @@ class Session {
 
   // Hàm 'getStatusInfo' từ session_model.dart
   Map<String, dynamic> getStatusInfo() {
+    // ✅✅✅ BỔ SUNG TRẠNG THÁI "Đang diễn ra" VÀO ĐÂY ✅✅✅
     switch (status) {
+      case 'Đang diễn ra':
+        return {'text': 'Đang diễn ra', 'color': Colors.green.shade600, 'enum': SessionStatus.inProgress};
       case 'Đã lên lịch':
         return {'text': 'Đã lên lịch', 'color': Colors.blue, 'enum': SessionStatus.pending};
       case 'Đã hoàn thành':
@@ -178,7 +182,8 @@ class Session {
       case 'Từ chối xin nghỉ - Đã lên lịch':
         return {'text': 'Từ chối xin nghỉ - Đã lên lịch', 'color': Colors.red, 'enum': SessionStatus.rejectedPending};
       default:
-        return {'text': 'Không xác định ($status)', 'color': Colors.black, 'enum': SessionStatus.unknown};
+      // Sửa màu mặc định cho dễ nhìn hơn
+        return {'text': 'Không xác định ($status)', 'color': Colors.black54, 'enum': SessionStatus.unknown};
     }
   }
 }
