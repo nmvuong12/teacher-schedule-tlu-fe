@@ -10,6 +10,34 @@ Future<void> main() async { // <-- 2. SỬA 'void' THÀNH 'Future<void> async'
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('vi_VN', null); // Khởi tạo locale tiếng Việt
 
+  // Xử lý lỗi một cách thân thiện, tránh hiển thị màn hình đỏ
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text(
+              'Đã xảy ra lỗi',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () {
+                // Reload app
+                runApp(const MyApp());
+              },
+              child: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      ),
+    );
+  };
+
   runApp(const MyApp());
 }
 
@@ -39,6 +67,7 @@ class MyApp extends StatelessWidget {
           ),
           useMaterial3: true,
           fontFamily: 'Roboto',
+          scaffoldBackgroundColor: Colors.white,
         ),
         routerConfig: AppRouter.router,
       ),

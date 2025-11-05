@@ -7,6 +7,7 @@ class SessionDto {
   final String? content;
   final String? label;
   final String? subjectName;
+  final String? className; // Tên lớp
   final String? startTime; // LocalTime from backend
   final String? endTime;   // LocalTime from backend
   final int? studentCount;
@@ -24,6 +25,7 @@ class SessionDto {
     this.content,
     this.label,
     this.subjectName,
+    this.className,
     this.startTime,
     this.endTime,
     this.studentCount,
@@ -42,6 +44,7 @@ class SessionDto {
         content: j['content'] as String?,
         label: j['label'] as String?,
         subjectName: j['subjectName'] as String?,
+        className: j['className'] as String?,
         startTime: j['startTime'] as String?,
         endTime: j['endTime'] as String?,
         studentCount: (j['studentCount'] as num?)?.toInt(),
