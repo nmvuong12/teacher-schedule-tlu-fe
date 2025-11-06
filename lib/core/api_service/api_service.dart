@@ -143,6 +143,29 @@ class ApiService {
     }
   }
 
+  /// Lấy danh sách điểm danh đơn giản của một student trong một course section.
+  /// Chỉ trả về status, date và label.
+  Future<List<Map<String, dynamic>>> getAttendanceListByStudentAndSection(
+      int studentId, int sectionId) async {
+    try {
+      final response = await _dio.get(
+        '/attendances/list',
+        queryParameters: {
+          'studentId': studentId,
+          'sectionId': sectionId,
+        },
+      );
+      return (response.data as List).cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        throw Exception('Không thể kết nối tới server.');
+      }
+      throw Exception('Không thể tải danh sách điểm danh: ${e.message}');
+    }
+  }
+
   Future<Attendance> updateAttendance(Attendance attendance) async {
     try {
       final response = await _dio.put(
