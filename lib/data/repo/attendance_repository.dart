@@ -2,6 +2,7 @@
 
 import '../../core/api_service/api_service.dart';
 import '../model/attendance_model.dart';
+import '../model/attendance_dto.dart';
 
 class AttendanceRepository {
   // [SỬA] - Gọi 'instance' của ApiService, không tạo mới
@@ -15,5 +16,14 @@ class AttendanceRepository {
   /// Cập nhật trạng thái điểm danh của 1 sinh viên
   Future<Attendance> updateAttendance(Attendance attendance) {
     return _apiService.updateAttendance(attendance);
+  }
+
+  /// Lấy danh sách điểm danh đơn giản của một student trong một course section.
+  /// Chỉ trả về status, date và label.
+  Future<List<AttendanceDto>> fetchAttendanceListByStudentAndSection(
+      int studentId, int sectionId) async {
+    final data = await _apiService.getAttendanceListByStudentAndSection(
+        studentId, sectionId);
+    return data.map((json) => AttendanceDto.fromJson(json)).toList();
   }
 }
