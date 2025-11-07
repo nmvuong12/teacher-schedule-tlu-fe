@@ -337,8 +337,31 @@ class _TeacherManagementState extends State<TeacherManagement> {
     final outerContext = context;
     final formKey = GlobalKey<FormState>();
     UserModel? selectedUser = isEdit ? availableUsers.first : null;
+    
+    // Controllers cho các trường bắt buộc
     final departmentController = TextEditingController(text: teacher?.department ?? '');
     final hoursController = TextEditingController(text: teacher?.totalTeachingHours.toString() ?? '0');
+    
+    // Controllers cho các trường optional
+    final codeController = TextEditingController(text: teacher?.code ?? '');
+    final degreeController = TextEditingController(text: teacher?.degree ?? '');
+    final workplaceController = TextEditingController(text: teacher?.workplace ?? '');
+    final specializationController = TextEditingController(text: teacher?.specialization ?? '');
+    final phoneController = TextEditingController(text: teacher?.phone ?? '');
+    final officeController = TextEditingController(text: teacher?.office ?? '');
+    final emailController = TextEditingController(text: teacher?.email ?? '');
+    final teachingSubjectsController = TextEditingController(text: teacher?.teachingSubjects ?? '');
+    final researchFieldsController = TextEditingController(text: teacher?.researchFields ?? '');
+    final addressController = TextEditingController(text: teacher?.address ?? '');
+    final titleController = TextEditingController(text: teacher?.title ?? '');
+    final bioController = TextEditingController(text: teacher?.bio ?? '');
+    
+    // State cho date và gender
+    String? selectedGender = teacher?.gender;
+    DateTime? selectedDateOfBirth;
+    if (teacher?.dateOfBirth != null && teacher!.dateOfBirth!.isNotEmpty) {
+      selectedDateOfBirth = DateTime.tryParse(teacher.dateOfBirth!);
+    }
 
     showDialog(
       context: outerContext,
@@ -346,45 +369,226 @@ class _TeacherManagementState extends State<TeacherManagement> {
           builder: (context, setState) {
             return AlertDialog(
               title: Text(title),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButtonFormField<UserModel>(
-                        value: selectedUser,
-                        hint: const Text('Chọn tài khoản người dùng'),
-                        // Vô hiệu hóa dropdown nếu đang sửa
-                        onChanged: isEdit ? null : (UserModel? user) {
-                          setState(() {
-                            selectedUser = user;
-                          });
-                        },
-                        items: availableUsers.map((UserModel user) {
-                          return DropdownMenuItem<UserModel>(
-                            value: user,
-                            child: Text(user.fullName ?? user.username),
-                          );
-                        }).toList(),
-                        validator: (value) => value == null ? 'Vui lòng chọn tài khoản' : null,
-                        decoration: const InputDecoration(labelText: 'Tài khoản Giảng viên'),
+              content: SizedBox(
+                width: 600,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 700),
+                  child: Form(
+                    key: formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                        // User selection
+                        DropdownButtonFormField<UserModel>(
+                          value: selectedUser,
+                          hint: const Text('Chọn tài khoản người dùng'),
+                          onChanged: isEdit ? null : (UserModel? user) {
+                            setState(() {
+                              selectedUser = user;
+                            });
+                          },
+                          items: availableUsers.map((UserModel user) {
+                            return DropdownMenuItem<UserModel>(
+                              value: user,
+                              child: Text(user.fullName ?? user.username),
+                            );
+                          }).toList(),
+                          validator: (value) => value == null ? 'Vui lòng chọn tài khoản' : null,
+                          decoration: const InputDecoration(labelText: 'Tài khoản Giảng viên *'),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Code (Mã giảng viên)
+                        TextFormField(
+                          controller: codeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Mã giảng viên',
+                            hintText: 'VD: GV001',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Department (bắt buộc)
+                        TextFormField(
+                          controller: departmentController,
+                          decoration: const InputDecoration(labelText: 'Khoa *'),
+                          validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập khoa' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Total teaching hours (bắt buộc)
+                        TextFormField(
+                          controller: hoursController,
+                          decoration: const InputDecoration(labelText: 'Tổng giờ dạy *'),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập tổng giờ' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Title (Chức danh)
+                        TextFormField(
+                          controller: titleController,
+                          decoration: const InputDecoration(
+                            labelText: 'Chức danh',
+                            hintText: 'VD: Tiến sĩ, Thạc sĩ',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Degree (Học vị)
+                        TextFormField(
+                          controller: degreeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Học vị',
+                            hintText: 'VD: Tiến sĩ, Thạc sĩ',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Specialization (Chuyên ngành)
+                        TextFormField(
+                          controller: specializationController,
+                          decoration: const InputDecoration(
+                            labelText: 'Chuyên ngành',
+                            hintText: 'VD: Công nghệ thông tin',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Phone
+                        TextFormField(
+                          controller: phoneController,
+                          decoration: const InputDecoration(
+                            labelText: 'Số điện thoại',
+                            hintText: 'VD: 0123456789',
+                          ),
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Email
+                        TextFormField(
+                          controller: emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            hintText: 'VD: teacher@example.com',
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Office (Văn phòng)
+                        TextFormField(
+                          controller: officeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Văn phòng',
+                            hintText: 'VD: Phòng A101',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Workplace (Nơi làm việc)
+                        TextFormField(
+                          controller: workplaceController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nơi làm việc',
+                            hintText: 'VD: Đại học ABC',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Address (Địa chỉ)
+                        TextFormField(
+                          controller: addressController,
+                          decoration: const InputDecoration(
+                            labelText: 'Địa chỉ',
+                            hintText: 'VD: 123 Đường ABC, Quận XYZ',
+                          ),
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Date of Birth
+                        InkWell(
+                          onTap: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDateOfBirth ?? DateTime.now(),
+                              firstDate: DateTime(1950),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                selectedDateOfBirth = picked;
+                              });
+                            }
+                          },
+                          child: InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: 'Ngày sinh',
+                            ),
+                            child: Text(
+                              selectedDateOfBirth == null
+                                  ? 'Chọn ngày sinh'
+                                  : '${selectedDateOfBirth!.day}/${selectedDateOfBirth!.month}/${selectedDateOfBirth!.year}',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Gender (Giới tính)
+                        DropdownButtonFormField<String>(
+                          value: selectedGender,
+                          decoration: const InputDecoration(labelText: 'Giới tính'),
+                          items: const [
+                            DropdownMenuItem(value: 'Nam', child: Text('Nam')),
+                            DropdownMenuItem(value: 'Nữ', child: Text('Nữ')),
+                            DropdownMenuItem(value: 'Khác', child: Text('Khác')),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              selectedGender = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Teaching Subjects (Môn học giảng dạy)
+                        TextFormField(
+                          controller: teachingSubjectsController,
+                          decoration: const InputDecoration(
+                            labelText: 'Môn học giảng dạy',
+                            hintText: 'VD: Toán học, Vật lý (phân cách bằng dấu phẩy)',
+                          ),
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Research Fields (Lĩnh vực nghiên cứu)
+                        TextFormField(
+                          controller: researchFieldsController,
+                          decoration: const InputDecoration(
+                            labelText: 'Lĩnh vực nghiên cứu',
+                            hintText: 'VD: Trí tuệ nhân tạo, Machine Learning (phân cách bằng dấu phẩy)',
+                          ),
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Bio (Tiểu sử)
+                        TextFormField(
+                          controller: bioController,
+                          decoration: const InputDecoration(
+                            labelText: 'Tiểu sử',
+                            hintText: 'Mô tả về giảng viên',
+                          ),
+                          maxLines: 5,
+                        ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: departmentController,
-                        decoration: const InputDecoration(labelText: 'Khoa'),
-                        validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập khoa' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: hoursController,
-                        decoration: const InputDecoration(labelText: 'Tổng giờ dạy (mặc định)'),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập tổng giờ' : null,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -418,11 +622,28 @@ class _TeacherManagementState extends State<TeacherManagement> {
                       );
 
                       final newTeacher = Teacher(
-                        teacherId: teacher?.teacherId, // Giữ ID cũ nếu sửa
+                        teacherId: teacher?.teacherId,
                         userId: selectedUser!.id,
                         userName: selectedUser!.fullName ?? selectedUser!.username,
+                        fullName: selectedUser!.fullName,
+                        code: codeController.text.isEmpty ? null : codeController.text,
                         department: departmentController.text,
                         totalTeachingHours: int.tryParse(hoursController.text) ?? 0,
+                        degree: degreeController.text.isEmpty ? null : degreeController.text,
+                        workplace: workplaceController.text.isEmpty ? null : workplaceController.text,
+                        specialization: specializationController.text.isEmpty ? null : specializationController.text,
+                        phone: phoneController.text.isEmpty ? null : phoneController.text,
+                        office: officeController.text.isEmpty ? null : officeController.text,
+                        email: emailController.text.isEmpty ? null : emailController.text,
+                        teachingSubjects: teachingSubjectsController.text.isEmpty ? null : teachingSubjectsController.text,
+                        researchFields: researchFieldsController.text.isEmpty ? null : researchFieldsController.text,
+                        address: addressController.text.isEmpty ? null : addressController.text,
+                        title: titleController.text.isEmpty ? null : titleController.text,
+                        bio: bioController.text.isEmpty ? null : bioController.text,
+                        dateOfBirth: selectedDateOfBirth != null
+                            ? '${selectedDateOfBirth!.year}-${selectedDateOfBirth!.month.toString().padLeft(2, '0')}-${selectedDateOfBirth!.day.toString().padLeft(2, '0')}'
+                            : null,
+                        gender: selectedGender,
                       );
 
                       Map<String, dynamic> result = {'ok': false, 'message': 'Lỗi không xác định'};
@@ -448,6 +669,9 @@ class _TeacherManagementState extends State<TeacherManagement> {
           }
       ),
     );
+    
+    // Cleanup controllers when dialog is dismissed
+    // Note: In a real app, you might want to use a proper dispose mechanism
   }
 
   void _showDeleteConfirmDialog(BuildContext context, Teacher teacher) {
