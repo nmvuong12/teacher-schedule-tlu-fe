@@ -21,7 +21,6 @@ class _CourseManagementState extends State<CourseManagement> {
   @override
   void initState() {
     super.initState();
-    // Data will be loaded by the router wrapper
   }
 
   @override
@@ -371,7 +370,7 @@ class _CourseManagementState extends State<CourseManagement> {
       context: outerContext,
       builder: (dialogCtx) => CourseSectionForm(
         onSubmit: (courseSection) async {
-          // ✅ Hiển thị loading dialog
+          // Hiển thị loading dialog
           showDialog(
             context: dialogCtx,
             barrierDismissible: false,
@@ -410,7 +409,7 @@ class _CourseManagementState extends State<CourseManagement> {
             if (dialogCtx.mounted) {
               Navigator.of(dialogCtx).pop();
             }
-            // ✅ Hiển thị thông báo thành công và thông báo đang sinh buổi học
+            // Hiển thị thông báo thành công và thông báo đang sinh buổi học
             _showSnack(outerContext, 'Tạo học phần thành công, đang sinh buổi học...', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
