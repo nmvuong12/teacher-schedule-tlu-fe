@@ -49,7 +49,7 @@ class _TeacherFormState extends State<TeacherForm> {
     super.initState();
     if (widget.teacher != null) {
       _selectedUserId = widget.teacher!.userId;
-      _selectedUserName = widget.teacher!.userName;
+      _selectedUserName = widget.teacher!.username;
       _selectedFullName = widget.teacher!.fullName ?? '';
       _departmentController.text = widget.teacher!.department;
       _totalTeachingHoursController.text = widget.teacher!.totalTeachingHours.toString();

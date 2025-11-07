@@ -383,7 +383,7 @@ class _CourseManagementState extends State<CourseManagement> {
                     children: [
                       CircularProgressIndicator(),
                       SizedBox(height: 16),
-                      Text('Đang tạo học phần...'),
+                      Text('Đang tạo học phần, quá trình này sẽ mất vài phút...'),
                     ],
                   ),
                 ),
@@ -410,7 +410,7 @@ class _CourseManagementState extends State<CourseManagement> {
               Navigator.of(dialogCtx).pop();
             }
             // Hiển thị thông báo thành công và thông báo đang sinh buổi học
-            _showSnack(outerContext, 'Tạo học phần thành công, đang sinh buổi học...', true);
+            _showSnack(outerContext, 'Tạo học phần thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
           }
