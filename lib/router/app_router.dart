@@ -54,7 +54,6 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: splash,
     redirect: (context, state) async {
-      // (Phần redirect của bạn đã ổn, giữ nguyên)
       final (token, userJson) = await SessionManager.loadSession();
       final bool isLoggedIn = token != null && userJson != null;
 

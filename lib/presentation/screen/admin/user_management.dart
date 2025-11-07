@@ -310,6 +310,27 @@ class _UserManagementState extends State<UserManagement> {
         // (LƯU Ý: Tên thuộc tính này phải khớp với file user_form.dart)
         userModel: null, // Truyền null để thêm mới
         onSubmit: (user) async { // user ở đây là UserModel (mới)
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang tạo người dùng...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Thêm người dùng thất bại';
           try {
@@ -317,9 +338,18 @@ class _UserManagementState extends State<UserManagement> {
             ok = await outerContext.read<AppController>().createUser(user);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Thêm người dùng thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -338,6 +368,27 @@ class _UserManagementState extends State<UserManagement> {
         // [SỬA 12] - Đổi 'user:' (cũ) thành 'userModel:' (mới)
         userModel: user,
         onSubmit: (updatedUser) async { // updatedUser là UserModel (mới)
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang cập nhật người dùng...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Cập nhật người dùng thất bại';
           try {
@@ -345,9 +396,18 @@ class _UserManagementState extends State<UserManagement> {
             ok = await outerContext.read<AppController>().updateUser(updatedUser);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Cập nhật người dùng thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -373,6 +433,27 @@ class _UserManagementState extends State<UserManagement> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Hiển thị loading dialog
+              showDialog(
+                context: dialogCtx,
+                barrierDismissible: false,
+                builder: (loadingCtx) => const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xóa người dùng...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+
               bool ok = false;
               String errorMessage = 'Xóa người dùng thất bại';
               try {
@@ -381,7 +462,14 @@ class _UserManagementState extends State<UserManagement> {
                 ok = await outerContext.read<AppController>().deleteUser(user.id);
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
+              } finally {
+                // Đóng loading dialog
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                }
               }
+
+              // Đóng confirm dialog
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }

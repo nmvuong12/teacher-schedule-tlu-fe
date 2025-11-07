@@ -248,15 +248,45 @@ class _ClassManagementState extends State<ClassManagement> {
       context: outerContext,
       builder: (dialogCtx) => ClassForm(
         onSubmit: (clazz) async {
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang tạo lớp học...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Thêm lớp học thất bại';
           try {
             ok = await outerContext.read<AppController>().createClass(clazz);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Thêm lớp học thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -273,15 +303,45 @@ class _ClassManagementState extends State<ClassManagement> {
       builder: (dialogCtx) => ClassForm(
         clazz: clazz,
         onSubmit: (updatedClass) async {
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang cập nhật lớp học...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Cập nhật lớp học thất bại';
           try {
             ok = await outerContext.read<AppController>().updateClass(updatedClass);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Cập nhật lớp học thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -305,6 +365,27 @@ class _ClassManagementState extends State<ClassManagement> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Hiển thị loading dialog
+              showDialog(
+                context: dialogCtx,
+                barrierDismissible: false,
+                builder: (loadingCtx) => const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xóa lớp học...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+
               bool ok = false;
               String errorMessage = 'Xóa lớp học thất bại';
               try {
@@ -313,7 +394,14 @@ class _ClassManagementState extends State<ClassManagement> {
                 }
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
+              } finally {
+                // Đóng loading dialog
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                }
               }
+
+              // Đóng confirm dialog
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }

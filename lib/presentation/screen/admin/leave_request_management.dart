@@ -440,7 +440,32 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
   }
 
   void _approveLeave(TeachingLeave leave) async {
-    final outerContext = context;
+    if (!mounted) return;
+    
+    final scaffoldContext = context;
+    
+    // Hiển thị loading dialog với rootNavigator
+    showDialog(
+      context: scaffoldContext,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogCtx) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Đang phê duyệt đơn xin nghỉ...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
     bool ok = false;
     String errorMessage = 'Phê duyệt đơn xin nghỉ thất bại';
     try {
@@ -450,15 +475,56 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
         expectedMakeupDate: leave.expectedMakeupDate,
         status: 1, // Đã phê duyệt
       );
-      ok = await outerContext.read<AppController>().updateTeachingLeave(updatedLeave);
+      ok = await scaffoldContext.read<AppController>().updateTeachingLeave(updatedLeave);
     } catch (e) {
       errorMessage = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      // Đóng loading dialog - sử dụng rootNavigator để đảm bảo đóng đúng
+      if (mounted) {
+        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
+        if (navigator.canPop()) {
+          navigator.pop(); // Đóng loading dialog
+        }
+      }
     }
-    _showSnack(outerContext, ok ? 'Phê duyệt đơn xin nghỉ thành công' : errorMessage, ok);
+    
+    // Hiển thị thông báo sau khi đóng dialog - đợi một frame để đảm bảo UI đã sẵn sàng
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showSnack(scaffoldContext, ok ? 'Phê duyệt đơn xin nghỉ thành công' : errorMessage, ok);
+        }
+      });
+    }
   }
 
   void _rejectLeave(TeachingLeave leave) async {
-    final outerContext = context;
+    if (!mounted) return;
+    
+    final scaffoldContext = context;
+    
+    // Hiển thị loading dialog với rootNavigator
+    showDialog(
+      context: scaffoldContext,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogCtx) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Đang từ chối đơn xin nghỉ...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
     bool ok = false;
     String errorMessage = 'Từ chối đơn xin nghỉ thất bại';
     try {
@@ -468,11 +534,27 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
         expectedMakeupDate: leave.expectedMakeupDate,
         status: 2, // Từ chối
       );
-      ok = await outerContext.read<AppController>().updateTeachingLeave(updatedLeave);
+      ok = await scaffoldContext.read<AppController>().updateTeachingLeave(updatedLeave);
     } catch (e) {
       errorMessage = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      // Đóng loading dialog - sử dụng rootNavigator để đảm bảo đóng đúng
+      if (mounted) {
+        final navigator = Navigator.of(scaffoldContext, rootNavigator: true);
+        if (navigator.canPop()) {
+          navigator.pop(); // Đóng loading dialog
+        }
+      }
     }
-    _showSnack(outerContext, ok ? 'Từ chối đơn xin nghỉ thành công' : errorMessage, ok);
+    
+    // Hiển thị thông báo sau khi đóng dialog - đợi một frame để đảm bảo UI đã sẵn sàng
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showSnack(scaffoldContext, ok ? 'Từ chối đơn xin nghỉ thành công' : errorMessage, ok);
+        }
+      });
+    }
   }
 
   void _showDeleteConfirmDialog(BuildContext context, TeachingLeave leave) {
@@ -489,13 +571,41 @@ class _LeaveRequestManagementState extends State<LeaveRequestManagement> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Hiển thị loading dialog
+              showDialog(
+                context: dialogCtx,
+                barrierDismissible: false,
+                builder: (loadingCtx) => const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xóa đơn xin nghỉ...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+
               bool ok = false;
               String errorMessage = 'Xóa đơn xin nghỉ thất bại';
               try {
                 ok = await outerContext.read<AppController>().deleteTeachingLeave(leave.sessionId);
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
+              } finally {
+                // Đóng loading dialog
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                }
               }
+
+              // Đóng confirm dialog
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }

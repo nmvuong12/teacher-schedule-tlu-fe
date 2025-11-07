@@ -396,6 +396,27 @@ class _TeacherManagementState extends State<TeacherManagement> {
                 ElevatedButton(
                   onPressed: () async {
                     if (formKey.currentState!.validate()) {
+                      // Hiển thị loading dialog
+                      showDialog(
+                        context: dialogCtx,
+                        barrierDismissible: false,
+                        builder: (loadingCtx) => Center(
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const CircularProgressIndicator(),
+                                  const SizedBox(height: 16),
+                                  Text(isEdit ? 'Đang cập nhật giảng viên...' : 'Đang tạo giảng viên...'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+
                       final newTeacher = Teacher(
                         teacherId: teacher?.teacherId, // Giữ ID cũ nếu sửa
                         userId: selectedUser!.id,
@@ -404,7 +425,15 @@ class _TeacherManagementState extends State<TeacherManagement> {
                         totalTeachingHours: int.tryParse(hoursController.text) ?? 0,
                       );
 
-                      final result = await onSubmit(newTeacher);
+                      Map<String, dynamic> result = {'ok': false, 'message': 'Lỗi không xác định'};
+                      try {
+                        result = await onSubmit(newTeacher);
+                      } finally {
+                        // Đóng loading dialog
+                        if (dialogCtx.mounted) {
+                          Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                        }
+                      }
 
                       if (Navigator.of(dialogCtx).canPop()) {
                         Navigator.of(dialogCtx).pop();
@@ -435,6 +464,27 @@ class _TeacherManagementState extends State<TeacherManagement> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Hiển thị loading dialog
+              showDialog(
+                context: dialogCtx,
+                barrierDismissible: false,
+                builder: (loadingCtx) => const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xóa giảng viên...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+
               bool ok = false;
               String errorMessage = 'Xóa giảng viên thất bại';
               try {
@@ -443,7 +493,14 @@ class _TeacherManagementState extends State<TeacherManagement> {
                 }
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
+              } finally {
+                // Đóng loading dialog
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                }
               }
+
+              // Đóng confirm dialog
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }

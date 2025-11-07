@@ -62,9 +62,9 @@ class ApiClient {
     final uri = Uri.parse('$baseUrl$path');
     foundation.debugPrint('PUT: $uri, Body: ${json.encode(body)}');
     final res = await http.put(uri, headers: jsonHeaders, body: json.encode(body)).timeout(
-      const Duration(seconds: 30),
+      const Duration(seconds: 60),
       onTimeout: () {
-        throw Exception('Request timeout after 30 seconds');
+        throw Exception('Request timeout after 60 seconds');
       },
     );
     _checkResponse(res);

@@ -371,16 +371,47 @@ class _CourseManagementState extends State<CourseManagement> {
       context: outerContext,
       builder: (dialogCtx) => CourseSectionForm(
         onSubmit: (courseSection) async {
+          // ✅ Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang tạo học phần...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Thêm học phần thất bại';
           try {
             ok = await outerContext.read<AppController>().createCourseSection(courseSection);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
-            _showSnack(outerContext, 'Thêm học phần thành công', true);
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
+            // ✅ Hiển thị thông báo thành công và thông báo đang sinh buổi học
+            _showSnack(outerContext, 'Tạo học phần thành công, đang sinh buổi học...', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
           }
@@ -396,15 +427,45 @@ class _CourseManagementState extends State<CourseManagement> {
       builder: (dialogCtx) => CourseSectionForm(
         courseSection: courseSection,
         onSubmit: (updatedCourseSection) async {
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang cập nhật học phần...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Cập nhật học phần thất bại';
           try {
             ok = await outerContext.read<AppController>().updateCourseSection(updatedCourseSection);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Cập nhật học phần thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -428,6 +489,27 @@ class _CourseManagementState extends State<CourseManagement> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Hiển thị loading dialog
+              showDialog(
+                context: dialogCtx,
+                barrierDismissible: false,
+                builder: (loadingCtx) => const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xóa học phần...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+
               bool ok = false;
               String errorMessage = 'Xóa học phần thất bại';
               try {
@@ -436,7 +518,14 @@ class _CourseManagementState extends State<CourseManagement> {
                 }
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
+              } finally {
+                // Đóng loading dialog
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                }
               }
+
+              // Đóng confirm dialog
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }
