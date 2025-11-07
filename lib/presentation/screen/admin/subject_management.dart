@@ -253,15 +253,45 @@ class _SubjectManagementState extends State<SubjectManagement> {
       context: outerContext,
       builder: (dialogCtx) => SubjectForm(
         onSubmit: (subject) async {
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang tạo môn học...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Thêm môn học thất bại';
           try {
             ok = await outerContext.read<AppController>().createSubject(subject);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Thêm môn học thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -278,15 +308,45 @@ class _SubjectManagementState extends State<SubjectManagement> {
       builder: (dialogCtx) => SubjectForm(
         subject: subject,
         onSubmit: (updatedSubject) async {
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang cập nhật môn học...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Cập nhật môn học thất bại';
           try {
             ok = await outerContext.read<AppController>().updateSubject(updatedSubject);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Cập nhật môn học thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -310,6 +370,27 @@ class _SubjectManagementState extends State<SubjectManagement> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Hiển thị loading dialog
+              showDialog(
+                context: dialogCtx,
+                barrierDismissible: false,
+                builder: (loadingCtx) => const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xóa môn học...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+
               bool ok = false;
               String errorMessage = 'Xóa môn học thất bại';
               try {
@@ -318,7 +399,14 @@ class _SubjectManagementState extends State<SubjectManagement> {
                 }
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
+              } finally {
+                // Đóng loading dialog
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                }
               }
+
+              // Đóng confirm dialog
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }

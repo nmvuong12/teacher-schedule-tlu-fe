@@ -254,15 +254,45 @@ class _StudentManagementState extends State<StudentManagement> {
       context: outerContext,
       builder: (dialogCtx) => StudentForm(
         onSubmit: (student) async {
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang tạo sinh viên...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Thêm sinh viên thất bại';
           try {
             ok = await outerContext.read<AppController>().createStudent(student);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Thêm sinh viên thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -279,15 +309,45 @@ class _StudentManagementState extends State<StudentManagement> {
       builder: (dialogCtx) => StudentForm(
         student: student,
         onSubmit: (updatedStudent) async {
+          // Hiển thị loading dialog
+          showDialog(
+            context: dialogCtx,
+            barrierDismissible: false,
+            builder: (loadingCtx) => const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang cập nhật sinh viên...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
           bool ok = false;
           String errorMessage = 'Cập nhật sinh viên thất bại';
           try {
             ok = await outerContext.read<AppController>().updateStudent(updatedStudent);
           } catch (e) {
             errorMessage = e.toString().replaceFirst('Exception: ', '');
+          } finally {
+            // Đóng loading dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+            }
           }
+
           if (ok) {
-            Navigator.of(dialogCtx).pop();
+            // Đóng form dialog
+            if (dialogCtx.mounted) {
+              Navigator.of(dialogCtx).pop();
+            }
             _showSnack(outerContext, 'Cập nhật sinh viên thành công', true);
           } else {
             _showSnack(outerContext, errorMessage, false);
@@ -311,13 +371,41 @@ class _StudentManagementState extends State<StudentManagement> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Hiển thị loading dialog
+              showDialog(
+                context: dialogCtx,
+                barrierDismissible: false,
+                builder: (loadingCtx) => const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xóa sinh viên...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+
               bool ok = false;
               String errorMessage = 'Xóa sinh viên thất bại';
               try {
                 ok = await outerContext.read<AppController>().deleteStudent(student.studentId);
               } catch (e) {
                 errorMessage = e.toString().replaceFirst('Exception: ', '');
+              } finally {
+                // Đóng loading dialog
+                if (dialogCtx.mounted) {
+                  Navigator.of(dialogCtx).pop(); // Đóng loading dialog
+                }
               }
+
+              // Đóng confirm dialog
               if (Navigator.of(dialogCtx).canPop()) {
                 Navigator.of(dialogCtx).pop();
               }
